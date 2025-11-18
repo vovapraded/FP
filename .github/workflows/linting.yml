@@ -43,7 +43,6 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
-        cache: 'maven'
         
     - name: Check Java files exist
       id: check-java

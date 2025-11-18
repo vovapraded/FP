@@ -27,7 +27,7 @@ jobs:
         cli: 1.11.1.1413
         
     - name: Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.m2/repository
@@ -50,9 +50,10 @@ jobs:
         fi
         
     - name: Setup clj-kondo
-      uses: clj-kondo/setup-clj-kondo@v1
-      with:
-        version: '2023.12.15'
+      run: |
+        curl -sLO https://raw.githubusercontent.com/clj-kondo/clj-kondo/master/script/install-clj-kondo
+        chmod +x install-clj-kondo
+        ./install-clj-kondo --dir /usr/local/bin --download-dir /tmp --version 2024.11.14
         
     - name: Run Clojure linters
       run: |
@@ -79,7 +80,7 @@ jobs:
         
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results-java-17
         path: test-results.txt

@@ -1,7 +1,9 @@
 (ns lab1.problem22.s1-1)
 
 (defn names-score [names]
-  (let [sorted-names (sort names)]))
+  (let [sorted-names (sort names)]
+    ;; TODO: implement names scoring logic
+    sorted-names))
 
 (defn get-names-score [letters acc]
   (letfn [(get-score [letter] (- (int letter) (int \A)))]

@@ -1,5 +1,5 @@
 (ns lab1.problem8.test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [are deftest]]
             [lab1.problem8.s1-1 :refer [max-product-tail-recursion]]
             [lab1.problem8.s1-2 :refer [max-product-recursion]]
             [lab1.problem8.s2 :refer [max-product-modular]]
