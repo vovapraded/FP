@@ -6,11 +6,11 @@
 
 (defn max-product-modular [digits window-size]
   (cond
-    (<= window-size 0) ##-Inf
-    (< (count digits) window-size) ##-Inf
+    (<= window-size 0) Double/NEGATIVE_INFINITY
+    (< (count digits) window-size) Double/NEGATIVE_INFINITY
     :else
     (let [windows (sliding-window window-size digits)
           products (map product windows)]
       (if (empty? products)
-        ##-Inf
+        Double/NEGATIVE_INFINITY
         (reduce max products)))))

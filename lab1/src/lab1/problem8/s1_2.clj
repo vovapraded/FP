@@ -3,8 +3,8 @@
 
 (defn max-product-recursion [coll window-size]
   (cond
-    (<= window-size 0) ##-Inf
-    (< (count coll) window-size) ##-Inf
+    (<= window-size 0) Double/NEGATIVE_INFINITY
+    (< (count coll) window-size) Double/NEGATIVE_INFINITY
     (= (count coll) window-size) (product coll)
     :else
     (max

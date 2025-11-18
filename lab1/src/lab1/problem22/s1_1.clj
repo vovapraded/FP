@@ -10,6 +10,3 @@
     (if (empty? letters)
       acc
       (recur (rest letters) (+ acc (get-score (first letters)))))))
-
-
-

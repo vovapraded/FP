@@ -4,15 +4,15 @@
 (defn max-product-tail-recursion
   ([coll window-size]
    (cond
-     (<= window-size 0) ##-Inf
-     (< (count coll) window-size) ##-Inf
+     (<= window-size 0) Double/NEGATIVE_INFINITY
+     (< (count coll) window-size) Double/NEGATIVE_INFINITY
      :else
-     (max-product-tail-recursion ##-Inf coll window-size)))
+     (max-product-tail-recursion Double/NEGATIVE_INFINITY coll window-size)))
 
-  ([current-max-product rest window-size]
-   (if (< (count rest) window-size)
+  ([current-max-product remaining window-size]
+   (if (< (count remaining) window-size)
      current-max-product
      (recur
-      (max current-max-product (product (take window-size rest)))
-      (next rest)
+      (max current-max-product (product (take window-size remaining)))
+      (next remaining)
       window-size))))

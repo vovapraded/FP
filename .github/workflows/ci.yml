@@ -45,7 +45,6 @@ jobs:
     - name: Compile Java files
       run: |
         cd lab1
-        # Компилируем Java файлы через Leiningen
         if find . -name "*.java" -type f | grep -q .; then
           lein javac
         else
@@ -61,7 +60,6 @@ jobs:
     - name: Run Clojure linters
       run: |
         cd lab1
-        # Запуск clj-kondo
         clj-kondo --lint src test --config .clj-kondo/config.edn
         
         # Запуск дополнительных линтеров через алиасы

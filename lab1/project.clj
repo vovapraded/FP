@@ -8,14 +8,19 @@
   :plugins [[lein-cljfmt "0.9.2"]
             [lein-kibit "0.1.8"]
             [lein-ancient "1.0.0-RC3"]
-            [lein-bikeshed "0.5.2"]]
+            [lein-bikeshed "0.5.2"]
+            [com.github.clj-kondo/lein-clj-kondo "2024.03.13"]]  ; ДОБАВЛЕНО
   :profiles {:dev {:dependencies [[criterium "0.4.6"]
-                                 [org.clojure/tools.namespace "1.4.4"]]}}
+                                  [org.clojure/tools.namespace "1.4.4"]]}}
   :test-paths ["test"]
   :java-source-paths ["src"]
   :javac-options ["-target" "17" "-source" "17"]
   :repl-options {:init-ns lab1.core}
+
+  :kibit {:replace true}
+
   :aliases {"lint" ["do"
+                    ["clj-kondo" "--lint" "src" "test"]
                     ["cljfmt" "check"]
                     ["kibit"]
                     ["bikeshed" "--max-line-length" "100"]]
