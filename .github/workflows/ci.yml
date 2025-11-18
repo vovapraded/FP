@@ -38,10 +38,13 @@ jobs:
           ${{ runner.os }}-clojure-
           
     - name: Install dependencies
-      run: lein deps
+      run: |
+        cd lab1
+        lein deps
       
     - name: Compile Java files
       run: |
+        cd lab1
         # Компилируем Java файлы через Leiningen
         if find . -name "*.java" -type f | grep -q .; then
           lein javac
@@ -57,6 +60,7 @@ jobs:
         
     - name: Run Clojure linters
       run: |
+        cd lab1
         # Запуск clj-kondo
         clj-kondo --lint src test --config .clj-kondo/config.edn
         
@@ -64,14 +68,19 @@ jobs:
         lein lint || echo "Linting completed with warnings"
         
     - name: Check dependencies
-      run: lein check-deps
+      run: |
+        cd lab1
+        lein check-deps
       
     - name: Run tests
-      run: lein test
+      run: |
+        cd lab1
+        lein test
       
     - name: Generate detailed test report
       if: always()
       run: |
+        cd lab1
         echo "=== Test Summary ===" > test-results.txt
         lein test 2>&1 | tee -a test-results.txt
         echo "" >> test-results.txt
@@ -83,4 +92,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-results-java-17
-        path: test-results.txt
+        path: lab1/test-results.txt
