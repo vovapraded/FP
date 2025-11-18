@@ -13,7 +13,7 @@
                                  [org.clojure/tools.namespace "1.4.4"]]}}
   :test-paths ["test"]
   :java-source-paths ["src"]
-  :javac-options ["-target" "11" "-source" "11"]
+  :javac-options ["-target" "17" "-source" "17"]
   :repl-options {:init-ns lab1.core}
   :aliases {"lint" ["do"
                     ["cljfmt" "check"]

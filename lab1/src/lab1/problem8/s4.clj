@@ -1,7 +1,6 @@
 (ns lab1.problem8.s4
   (:require [lab1.problem8.utils :refer [product]]))
 
-
 (defn max-product-loop [digits window-size]
   (cond
     (<= window-size 0) ##-Inf

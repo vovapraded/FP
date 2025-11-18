@@ -13,6 +13,6 @@
    (if (< (count rest) window-size)
      current-max-product
      (recur
-       (max current-max-product (product (take window-size rest)))
-       (next rest)
-       window-size))))
+      (max current-max-product (product (take window-size rest)))
+      (next rest)
+      window-size))))

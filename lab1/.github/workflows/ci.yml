@@ -9,10 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        java-version: [11, 17]
         
     steps:
     - name: Checkout code
@@ -22,7 +18,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: ${{ matrix.java-version }}
+        java-version: '17'
         
     - name: Install Clojure tools
       uses: DeLaGuardo/setup-clojure@12.5
@@ -85,5 +81,5 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v3
       with:
-        name: test-results-java-${{ matrix.java-version }}
+        name: test-results-java-17
         path: test-results.txt
