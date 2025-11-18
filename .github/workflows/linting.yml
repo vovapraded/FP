@@ -17,10 +17,12 @@ jobs:
     - name: Setup clj-kondo
       uses: clj-kondo/setup-clj-kondo@v1
       with:
-        version: '2023.12.15'
+        version: '2024.11.14'
         
     - name: Run clj-kondo linter
-      run: clj-kondo --lint src test --config .clj-kondo/config.edn
+      run: |
+        cd lab1
+        clj-kondo --lint src test --config .clj-kondo/config.edn
       
     - name: Check code formatting (optional)
       run: |
@@ -40,10 +42,12 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+        cache: 'maven'
         
     - name: Check Java files exist
       id: check-java
       run: |
+        cd lab1
         if find . -name "*.java" -type f | grep -q .; then
           echo "java_files=true" >> $GITHUB_OUTPUT
         else
@@ -152,4 +156,5 @@ jobs:
         EOF
         
         # Запускаем checkstyle для всех Java файлов
-        find . -name "*.java" -type f -exec java -jar checkstyle-10.12.4-all.jar -c checkstyle.xml {} \;
+        cd lab1
+        find . -name "*.java" -type f -exec java -jar ../checkstyle-10.12.4-all.jar -c ../checkstyle.xml {} \;
