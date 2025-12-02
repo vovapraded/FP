@@ -6,9 +6,7 @@
     (<= window-size 0) Double/NEGATIVE_INFINITY
     (< (count digits) window-size) Double/NEGATIVE_INFINITY
     :else
-    (let [max-prod (atom Double/NEGATIVE_INFINITY)]
-      (dotimes [i (inc (- (count digits) window-size))]
-        (let [window (take window-size (drop i digits))
-              prod (product window)]
-          (swap! max-prod max prod)))
-      @max-prod)))
+    (apply max
+           (for [i (range (inc (- (count digits) window-size)))]
+             (let [window (take window-size (drop i digits))]
+               (product window))))))
