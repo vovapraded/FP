@@ -1,10 +1,11 @@
 (ns lab1.largest-product.test
   (:require [clojure.test :refer [are deftest]]
-            [lab1.largest-product.tail-recursive :as tail-recursive]
-            [lab1.largest-product.recursive :as recursive]
-            [lab1.largest-product.modular :as modular]
+            [lab1.largest-product.infinity-seq :as infinity-seq]
+            [lab1.largest-product.loop :as loop]
             [lab1.largest-product.map-generation :as map-generation]
-            [lab1.largest-product.loop :as loop]))
+            [lab1.largest-product.modular :as modular]
+            [lab1.largest-product.recursive :as recursive]
+            [lab1.largest-product.tail-recursive :as tail-recursive]))
 
 (defn string-to-digits [s]
   (mapv #(- (int %) (int \0)) s))
@@ -88,3 +89,20 @@
       3 648
       4 5832
       13 23514624000)))
+
+(deftest fibonacci-digits-sequence-test
+  (let [expected [0 1 1 2 3 5 8 3 1 4]
+        actual (take 10 (infinity-seq/fibonacci-digits-seq))]
+    (assert (= expected actual))))
+
+(deftest max-product-from-fibonacci-test
+  (assert (= 0 (infinity-seq/max-product-from-fibonacci 1 1)))
+  (assert (= 1 (infinity-seq/max-product-from-fibonacci 1 3)))
+  (assert (= 1 (infinity-seq/max-product-from-fibonacci 2 3)))
+  (assert (= 6 (infinity-seq/max-product-from-fibonacci 2 5)))
+  (assert (= 40 (infinity-seq/max-product-from-fibonacci 2 10))))
+
+(deftest fibonacci-edge-cases-test
+  (assert (= Double/NEGATIVE_INFINITY (infinity-seq/max-product-from-fibonacci 0 10)))
+  (assert (= Double/NEGATIVE_INFINITY (infinity-seq/max-product-from-fibonacci -1 10)))
+  (assert (= Double/NEGATIVE_INFINITY (infinity-seq/max-product-from-fibonacci 5 3))))
