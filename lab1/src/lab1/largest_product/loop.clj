@@ -1,7 +1,7 @@
-(ns lab1.problem8.s4
-  (:require [lab1.problem8.utils :refer [product]]))
+(ns lab1.largest-product.loop
+  (:require [lab1.largest-product.utils :refer [product]]))
 
-(defn max-product-loop [digits window-size]
+(defn max-product [digits window-size]
   (cond
     (<= window-size 0) Double/NEGATIVE_INFINITY
     (< (count digits) window-size) Double/NEGATIVE_INFINITY

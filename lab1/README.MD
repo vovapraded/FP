@@ -1,7 +1,7 @@
 
-[Problem 8](PROBLEM_8.MD)
+[Largest Product in a Series](LARGEST_PRODUCT.MD)
 
-[Problem 22](PROBLEM_22.MD)
+[Names Scores](NAMES_SCORES.MD)
 
 
 

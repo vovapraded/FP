@@ -1,18 +1,18 @@
-(ns lab1.problem22.s1-1)
+(ns lab1.names-scores.tail-recursive)
 
-(defn name-score [name]
+(defn calculate-name-score [name-str]
   (letfn [(letter-value [letters acc]
             (if (empty? letters)
               acc
               (recur (rest letters)
-                     (+ acc (+ (- (int (first letters)) (int \A)) 1)))))]
-    (letter-value name 0)))
+                     (+ acc (inc (- (int (first letters)) (int \A)))))))]
+    (letter-value name-str 0)))
 
-(defn total-names-score [names]
+(defn total-score [names]
   (let [sorted-names (sort names)]
     (letfn [(score-with-positions [name-list position acc]
               (if (empty? name-list)
                 acc
-                (let [score (* position (name-score (first name-list)))]
+                (let [score (* position (calculate-name-score (first name-list)))]
                   (recur (rest name-list) (inc position) (+ acc score)))))]
       (score-with-positions sorted-names 1 0))))

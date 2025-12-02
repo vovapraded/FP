@@ -1,13 +1,13 @@
-(ns lab1.problem8.s1-1
-  (:require [lab1.problem8.utils :refer [product]]))
+(ns lab1.largest-product.tail-recursive
+  (:require [lab1.largest-product.utils :refer [product]]))
 
-(defn max-product-tail-recursion
+(defn max-product
   ([coll window-size]
    (cond
      (<= window-size 0) Double/NEGATIVE_INFINITY
      (< (count coll) window-size) Double/NEGATIVE_INFINITY
      :else
-     (max-product-tail-recursion Double/NEGATIVE_INFINITY coll window-size)))
+     (max-product Double/NEGATIVE_INFINITY coll window-size)))
 
   ([current-max-product remaining window-size]
    (if (< (count remaining) window-size)
