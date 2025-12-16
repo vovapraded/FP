@@ -9,6 +9,4 @@
     (let [windows (map #(take window-size (drop % digits))
                        (range (inc (- (count digits) window-size))))
           products (map product windows)]
-      (if (empty? products)
-        Double/NEGATIVE_INFINITY
-        (apply max products)))))
+      (apply max products))))
