@@ -11,6 +11,4 @@
     :else
     (let [windows (sliding-window window-size digits)
           products (map product windows)]
-      (if (empty? products)
-        Double/NEGATIVE_INFINITY
-        (reduce max products)))))
+      (reduce max products))))
