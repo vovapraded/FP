@@ -3,7 +3,7 @@
 (defn calculate-name-score [name-str]
   (if (empty? name-str)
     0
-    (+ (inc (- (int (first name-str)) (int \A)))
+    (+ (-> name-str first int (- (int \A)) inc)
        (calculate-name-score (rest name-str)))))
 
 (defn total-score [names]
