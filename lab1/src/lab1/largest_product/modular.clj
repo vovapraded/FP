@@ -9,6 +9,7 @@
     (<= window-size 0) Double/NEGATIVE_INFINITY
     (< (count digits) window-size) Double/NEGATIVE_INFINITY
     :else
-    (let [windows (sliding-window window-size digits)
-          products (map product windows)]
-      (reduce max products))))
+    (->> digits
+         (sliding-window window-size)
+         (map product)
+         (reduce max))))

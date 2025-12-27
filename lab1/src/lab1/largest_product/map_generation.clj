@@ -6,7 +6,7 @@
     (<= window-size 0) Double/NEGATIVE_INFINITY
     (< (count digits) window-size) Double/NEGATIVE_INFINITY
     :else
-    (let [windows (map #(take window-size (drop % digits))
-                       (range (inc (- (count digits) window-size))))
-          products (map product windows)]
-      (apply max products))))
+    (->> (range (inc (- (count digits) window-size)))
+         (map #(take window-size (drop % digits)))
+         (map product)
+         (apply max))))

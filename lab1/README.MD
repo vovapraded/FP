@@ -1,17 +1,35 @@
 
+# Lab 1 Прадед Владимир
+
 [Largest Product in a Series](LARGEST_PRODUCT.MD)
 
 [Names Scores](NAMES_SCORES.MD)
 
+## Implementations
 
+### Largest Product in a Series
 
-Для каждой проблемы должно быть представлено несколько решений:
+- [`tail_recursive.clj`](src/lab1/largest_product/tail_recursive.clj)
+- [`recursive.clj`](src/lab1/largest_product/recursive.clj)
+- [`modular.clj`](src/lab1/largest_product/modular.clj)
+- [`map_generation.clj`](src/lab1/largest_product/map_generation.clj)
+- [`loop.clj`](src/lab1/largest_product/loop.clj)
+- [`infinity_seq.clj`](src/lab1/largest_product/infinity_seq.clj)
+- [`utils.clj`](src/lab1/largest_product/utils.clj)
 
-1. монолитные реализации с использованием:
-   1. хвостовой рекурсии;
-   2. рекурсии (вариант с хвостовой рекурсией не является примером рекурсии);
-2. модульной реализации, где явно разделена генерация последовательности, фильтрация и свёртка (должны использоваться функции reduce/fold, filter и аналогичные);
-3. генерация последовательности при помощи отображения (map);
-4. работа со спец. синтаксисом для циклов (где применимо);
-5. работа с бесконечными списками для языков, поддерживающих ленивые коллекции или итераторы как часть языка (к примеру Haskell, Clojure);
-6. реализация на любом удобном для вас традиционном языке программирования для сравнения.
+### Names Scores
+
+- [`tail_recursive.clj`](src/lab1/names_scores/tail_recursive.clj)
+- [`recursive.clj`](src/lab1/names_scores/recursive.clj)
+- [`modular.clj`](src/lab1/names_scores/modular.clj)
+- [`loop.clj`](src/lab1/names_scores/loop.clj)
+
+## Tests
+
+- [`largest_product/test.clj`](test/lab1/largest_product/test.clj)
+- [`names_scores/test.clj`](test/lab1/names_scores/test.clj)
+- [`names.txt`](resources/names.txt)
+
+## Configuration
+
+- [`project.clj`](project.clj)
