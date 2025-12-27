@@ -11,8 +11,8 @@
 
 - [`tail_recursive.clj`](src/lab1/largest_product/tail_recursive.clj)
 - [`recursive.clj`](src/lab1/largest_product/recursive.clj)
-- [`modular.clj`](src/lab1/largest_product/modular.clj)
-- [`map_generation.clj`](src/lab1/largest_product/map_generation.clj)
+- [`modular.clj`](src/lab1/largest_product/modular.clj) (used ->>)
+- [`map_generation.clj`](src/lab1/largest_product/map_generation.clj) (used ->>)
 - [`loop.clj`](src/lab1/largest_product/loop.clj)
 - [`infinity_seq.clj`](src/lab1/largest_product/infinity_seq.clj)
 - [`utils.clj`](src/lab1/largest_product/utils.clj)
@@ -20,8 +20,8 @@
 ### Names Scores
 
 - [`tail_recursive.clj`](src/lab1/names_scores/tail_recursive.clj)
-- [`recursive.clj`](src/lab1/names_scores/recursive.clj)
-- [`modular.clj`](src/lab1/names_scores/modular.clj)
+- [`recursive.clj`](src/lab1/names_scores/recursive.clj) (used ->)
+- [`modular.clj`](src/lab1/names_scores/modular.clj) (used ->>)
 - [`loop.clj`](src/lab1/names_scores/loop.clj)
 
 ## Tests
