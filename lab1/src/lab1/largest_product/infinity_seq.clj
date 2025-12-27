@@ -7,6 +7,6 @@
 
 (defn max-product-from-fibonacci
   [window-size take-count]
-  (-> (fibonacci-digits-seq)
-      (take take-count)
-      (max-product window-size)))
+  (max-product (-> (fibonacci-digits-seq)
+                   (take take-count))
+               window-size))
