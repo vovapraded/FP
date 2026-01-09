@@ -14,12 +14,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-        
     - name: Install Clojure tools
       uses: DeLaGuardo/setup-clojure@12.5
       with:
@@ -39,12 +33,12 @@ jobs:
           
     - name: Install dependencies
       run: |
-        cd lab1
+        cd lab2
         lein deps
       
     - name: Compile Java files
       run: |
-        cd lab1
+        cd lab2
         if find . -name "*.java" -type f | grep -q .; then
           lein javac
         else
@@ -59,7 +53,7 @@ jobs:
         
     - name: Run Clojure linters
       run: |
-        cd lab1
+        cd lab2
         clj-kondo --lint src test --config .clj-kondo/config.edn
         
         # Запуск дополнительных линтеров через алиасы
@@ -67,18 +61,18 @@ jobs:
         
     - name: Check dependencies
       run: |
-        cd lab1
+        cd lab2
         lein check-deps || true
       
     - name: Run tests
       run: |
-        cd lab1
+        cd lab2
         lein test
       
     - name: Generate detailed test report
       if: always()
       run: |
-        cd lab1
+        cd lab2
         echo "=== Test Summary ===" > test-results.txt
         lein test 2>&1 | tee -a test-results.txt
         echo "" >> test-results.txt
@@ -89,5 +83,5 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-results-java-17
-        path: lab1/test-results.txt
+        name: test-results-clojure
+        path: lab2/test-results.txt
