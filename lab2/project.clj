@@ -1,6 +1,6 @@
-(defproject lab1 "0.1.0-SNAPSHOT"
-  :description "Functional Programming Lab 1 - Project Euler solutions"
-  :url "https://github.com/your-username/fp-lab1"
+(defproject lab2 "0.1.0-SNAPSHOT"
+  :description "Functional Programming Lab 2 - Trie Set"
+  :url "https://github.com/your-username/fp-lab2"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url  "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.11.1"]
@@ -15,7 +15,7 @@
   :test-paths ["test"]
   :java-source-paths ["src"]
   :javac-options ["-target" "17" "-source" "17"]
-  :repl-options {:init-ns lab1.core}
+  :repl-options {:init-ns lab2.core}
 
   :kibit {:replace true}
 
