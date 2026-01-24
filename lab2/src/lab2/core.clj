@@ -1,4 +1,5 @@
-(ns lab2.core)
+(ns lab2.core
+  (:require [clojure.set :as set]))
 
 ;; Узел дерева
 (defrecord TrieNode [children terminal? count])
@@ -19,28 +20,23 @@
   (update node :count + delta))
 
 (defn trie-contains? [node word]
-  (loop [current-node node
-         ch (first word)
-         rest-word (rest word)
-         ]
-    (if (empty? rest-word)
-      (:terminal? current-node)
-      (if (contains? (:children current-node) ch)
-        (recur (get (:children current-node) ch) (first rest-word) (rest rest-word))
-        false
-        )
-      )
-    )
-  )
+  (if (empty? word)
+    (:terminal? node)
+    (let [ch (first word)
+          rest-word (rest word)
+          child (get (:children node) ch)]
+      (if child
+        (trie-contains? child rest-word)
+        false))))
 
 
 (defn trie-insert [node word]
   (if (empty? word)
     (if (:terminal? node)
-      node  ; слово уже есть
+      node                                                  ; слово уже есть
       (-> node
           (assoc :terminal? true)
-          (update-count 1)))  ; новое слово
+          (update-count 1)))                                ; новое слово
 
     (let [ch (first word)
           rest-word (rest word)
@@ -53,14 +49,13 @@
           (update-count count-delta)))))
 
 
-;; Удаление строки
 (defn trie-remove [node word]
   (if (empty? word)
     (if (:terminal? node)
       (-> node
           (assoc :terminal? false)
           (update-count -1))
-      node)  ; Слова и так нет
+      node)                                                 ; Слова и так нет
 
     (let [ch (first word)
           rest-word (rest word)
@@ -79,112 +74,50 @@
 
 
 
-;; Получение размера множества
 (defn trie-size [node]
   (:count node))
 
-;; Проверка на пустоту
 (defn trie-empty? [node]
   (= (:count node) 0))
 
-;; Получение всех слов в виде последовательности
-;(defn trie-to-seq [node]
-;  (letfn [(collect [current-node prefix]
-;            (let [words (if (:terminal? current-node) [prefix] [])]
-;              (concat words
-;                      (mapcat (fn [[ch child-node]]
-;                                (collect child-node (str prefix ch)))
-;                              (:children current-node)))))]
-;    (collect node "")))
+(defn trie-to-seq [node]
+  (letfn [(collect [current-node prefix]
+            (->> (:children current-node)
+                 (mapcat (fn [[ch child-node]]
+                           (collect child-node (str prefix ch))))
+                 (concat (when (:terminal? current-node) [prefix]))))]
+    (collect node "")))
 
 
 ;; Создание trie-множества из слов
 (defn trie-set [& words]
   (reduce trie-insert empty-node words))
 
-;;; Функция фильтрации
-;(defn trie-filter
-;  "Фильтрует элементы trie-множества по предикату, возвращает новое множество"
-;  [pred trie]
-;  (let [all-words (trie-to-seq trie)
-;        filtered-words (filter pred all-words)]
-;    (reduce insert empty-node filtered-words)))
-;
-;;; Функция отображения
-;(defn trie-map
-;  "Применяет функцию к каждому элементу trie-множества, возвращает новое множество"
-;  [f trie]
-;  (let [all-words (trie-to-seq trie)
-;        mapped-words (map f all-words)]
-;    (reduce insert empty-node mapped-words)))
-;
-;;; Левая свертка - обходим trie слева направо напрямую
-;(defn trie-fold-left
-;  "Левая свертка над элементами trie-множества"
-;  [f acc trie]
-;  (letfn [(fold-helper [current-node prefix acc]
-;            (let [acc' (if (:terminal? current-node)
-;                        (f acc prefix)
-;                        acc)]
-;              (reduce (fn [acc [ch child-node]]
-;                        (fold-helper child-node (str prefix ch) acc))
-;                      acc'
-;                      (sort (:children current-node)))))]
-;    (fold-helper trie "" acc)))
-;
-;;; Правая свертка - обходим trie справа налево напрямую
-;(defn trie-fold-right
-;  "Правая свертка над элементами trie-множества"
-;  [f acc trie]
-;  (letfn [(fold-helper [current-node prefix acc]
-;            (let [children-result (reduce (fn [acc [ch child-node]]
-;                                           (fold-helper child-node (str prefix ch) acc))
-;                                         acc
-;                                         (reverse (sort (:children current-node))))]
-;              (if (:terminal? current-node)
-;                (f prefix children-result)
-;                children-result)))]
-;    (fold-helper trie "" acc)))
+
+(defn trie-union [trie1 trie2]
+  (cond
+    (trie-empty? trie1) trie2
+    (trie-empty? trie2) trie1
+    :else (letfn [(children-union [children1 children2]
+                    (->> (set/union (set (keys children1))
+                                    (set (keys children2)))
+                         (reduce (fn [acc ch]
+                                   (let [child1 (get children1 ch)
+                                         child2 (get children2 ch)]
+                                     (cond
+                                       (and child1 child2) (assoc acc ch (trie-union child1 child2))
+                                       child1 (assoc acc ch child1)
+                                       child2 (assoc acc ch child2))))
+                                 {})))]
+
+            (let [merged-children (children-union (:children trie1) (:children trie2))
+                  terminal? (or (:terminal? trie1) (:terminal? trie2))
+                  children-count (reduce + (map :count (vals merged-children)))
+                  total-count (if terminal? (inc children-count) children-count)]
+
+              (->TrieNode merged-children terminal? total-count)))))
 
 
-;; Примеры использования
-(comment
-  ;; Создание trie-множества
-  (def trie (trie-set "cat" "car" "cart" "dog"))
-  
-  ;; Основные операции
-  (trie-contains? trie "cat")    ; → true
-  (trie-size trie)               ; → 4
-  (trie-to-seq trie)            ; → ("car" "cart" "cat" "dog")
-  
-  ;; Добавление и удаление элементов
-  (def new-trie (trie-insert trie "bird"))
-  (trie-size new-trie)          ; → 5
-  
-  (def smaller-trie (trie-remove trie "cat"))
-  (trie-size smaller-trie)      ; → 3
-  
-  ;; Фильтрация - оставляем только слова длиннее 3 символов
-  (def filtered (trie-filter #(> (count %) 3) trie))
-  (trie-to-seq filtered)        ; → ("cart")
-  
-  ;; Отображение - преобразуем все слова в верхний регистр
-  (def mapped (trie-map clojure.string/upper-case trie))
-  (trie-to-seq mapped)          ; → ("CAR" "CART" "CAT" "DOG")
-  
-  ;; Левая свертка - соединяем все слова через запятую
-  (trie-fold-left #(if (empty? %1) %2 (str %1 ", " %2)) "" trie)
-  ; → "car, cart, cat, dog"
-  
-  ;; Правая свертка - подсчитываем общую длину всех слов
-  (trie-fold-right #(+ %1 (count %2)) 0 trie)
-  ; → 13 (3+4+3+3)
-  
-  ;; Комбинированные операции
-  ;; Найдем длину самого длинного слова, начинающегося на "ca"
-  (-> trie
-      (trie-filter #(.startsWith % "ca"))
-      (trie-fold-left #(max %1 (count %2)) 0))
-  ; → 4 ("cart")
-)
+(defn trie-concat [& tries]
+  (reduce trie-union empty-node tries))
 
