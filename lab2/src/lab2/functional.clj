@@ -39,3 +39,9 @@
               (node/->TrieNode new-children keep-word? new-count)))]
 
     (filter-nodes trie "")))
+
+(defn trie-map [f trie]
+  (trie-fold (fn [acc word]
+               (basic/trie-insert acc (f word)))
+             node/empty-node
+             trie))
