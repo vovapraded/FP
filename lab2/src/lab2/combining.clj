@@ -4,12 +4,10 @@
             [lab2.basic :as basic]))
 
 (defn trie-set 
-  "Создает trie-множество из слов"
   [& words]
   (reduce basic/trie-insert node/empty-node words))
 
 (defn trie-union 
-  "Объединяет два trie в одно"
   [trie1 trie2]
   (cond
     (basic/trie-empty? trie1) trie2
@@ -33,7 +31,6 @@
 
               (->TrieNode merged-children terminal? total-count)))))
 
-(defn trie-concat 
-  "Объединяет несколько trie в одно"
+(defn trie-union-all
   [& tries]
   (reduce trie-union node/empty-node tries))

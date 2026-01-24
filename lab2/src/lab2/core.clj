@@ -14,8 +14,6 @@
 (def trie-contains? basic/trie-contains?)
 (def trie-insert basic/trie-insert)
 (def trie-remove basic/trie-remove)
-
-;; Экспорт утилитарных функций
 (def trie-size basic/trie-size)
 (def trie-empty? basic/trie-empty?)
 (def trie-to-seq basic/trie-to-seq)
@@ -23,4 +21,4 @@
 ;; Экспорт операций объединения
 (def trie-set combining/trie-set)
 (def trie-union combining/trie-union)
-(def trie-concat combining/trie-concat)
+(def trie-union-all combining/trie-union-all)
