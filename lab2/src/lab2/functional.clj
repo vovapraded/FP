@@ -21,11 +21,12 @@
     (reduce-impl init trie "")))
 
 
-(defn trie-reduce-right [f init trie]
+(defn trie-reduce-right
   "Правая свертка trie - применяет функцию к каждому слову в обратном порядке обхода дерева.
    f - функция (word acc) -> new-acc, принимающая слово первым аргументом
    init - начальное значение аккумулятора
    trie - дерево для свертки"
+  [f init trie]
   (letfn [(collect-words [current-node prefix]
             (let [current-word (if (:terminal? current-node) [prefix] [])
                   child-words (->> (:children current-node)

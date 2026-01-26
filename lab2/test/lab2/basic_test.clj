@@ -1,6 +1,6 @@
 (ns lab2.basic-test
-  (:require [clojure.test :refer :all]
-            [lab2.core :refer :all]))
+  (:require [clojure.test :refer [deftest is testing]]
+            [lab2.core :refer [trie-set]]))
 
 (deftest trie-set-insert-comprehensive-test
   (testing "Добавление слов с общим префиксом"
@@ -66,7 +66,7 @@
   (testing "Создание с элементами"
     (let [ts (trie-set "apple" "banana" "cherry")]
       (is (= 3 (count ts)))
-      (is (not (empty? ts)))
+      (is (seq ts))
       (is (= #{"apple" "banana" "cherry"} (set (seq ts))))))
 
   (testing "Вызов как функция"

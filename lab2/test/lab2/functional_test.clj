@@ -1,6 +1,7 @@
 (ns lab2.functional-test
-  (:require [clojure.test :refer :all]
-            [lab2.core :refer :all]))
+  (:require [clojure.test :refer [deftest is testing]]
+            [lab2.core :refer [filter-set map-set reduce-left-set reduce-right-set trie-set]]
+            [clojure.string :as str]))
 
 (deftest trie-set-reduce-test
   (testing "Reduce пустого множества"
@@ -71,8 +72,8 @@
 (deftest map-set-test
   (testing "Преобразование пустого множества"
     (let [ts (trie-set)
-          custom-result (map-set clojure.string/upper-case ts)
-          std-result (map clojure.string/upper-case ts)]
+          custom-result (map-set str/upper-case ts)
+          std-result (map str/upper-case ts)]
       (is (= 0 (count custom-result)))
       (is (empty? custom-result))
       (is (empty? std-result))))
@@ -80,12 +81,12 @@
   (testing "Преобразование в верхний регистр"
     (let [ts (trie-set "cat" "dog")]
       ;; Тест кастомной функции map-set
-      (let [result (map-set clojure.string/upper-case ts)]
+      (let [result (map-set str/upper-case ts)]
         (is (= 2 (count result)))
         (is (contains? result "CAT"))
         (is (contains? result "DOG")))
       ;; Тест стандартной функции map
-      (let [result (map clojure.string/upper-case ts)]
+      (let [result (map str/upper-case ts)]
         (is (= 2 (count result)))
         (is (= #{"CAT" "DOG"} (set result))))))
 
@@ -104,19 +105,19 @@
   (testing "Исходное множество остается неизменным"
     (let [original (trie-set "test")]
       ;; Тест с кастомной функцией
-      (let [result (map-set clojure.string/upper-case original)]
+      (let [result (map-set str/upper-case original)]
         (is (contains? original "test"))
         (is (not (contains? original "TEST")))
         (is (contains? result "TEST")))
       ;; Тест со стандартной функцией
-      (let [result (map clojure.string/upper-case original)]
+      (let [result (map str/upper-case original)]
         (is (contains? original "test"))
         (is (= #{"TEST"} (set result))))))
 
   (testing "Применение сложной функции преобразования"
     (let [ts (trie-set "cat" "dog" "bird")
           transform-fn (fn [word]
-                         (str (clojure.string/capitalize word) "-" (count word)))
+                         (str (str/capitalize word) "-" (count word)))
           result (map transform-fn ts)]
       (is (= 3 (count result)))
       (is (= #{"Cat-3" "Dog-3" "Bird-4"} (set result))))))
@@ -136,28 +137,28 @@
       (is (= 6 (reduce-left-set (fn [acc word] (+ acc (count word))) 0 ts)))))
 
   (testing "Сбор в список левой сверткой"
-    (let [ts (trie-set "cat" "dog")]
-      (let [result (reduce-left-set conj [] ts)]
-        (is (= 2 (count result)))
-        (is (= #{"cat" "dog"} (set result)))))))
+    (let [ts (trie-set "cat" "dog")
+          result (reduce-left-set conj [] ts)]
+      (is (= 2 (count result)))
+      (is (= #{"cat" "dog"} (set result))))))
 
 (deftest reduce-right-set-test
   (testing "Правая свертка пустого множества"
     (let [ts (trie-set)]
-      (is (= 0 (reduce-right-set (fn [word acc] (inc acc)) 0 ts)))
+      (is (= 0 (reduce-right-set (fn [_ acc] (inc acc)) 0 ts)))
       (is (= [] (reduce-right-set (fn [word acc] (conj acc word)) [] ts)))))
 
   (testing "Подсчет элементов правой сверткой"
     (let [ts (trie-set "a" "b" "c")]
-      (is (= 3 (reduce-right-set (fn [word acc] (inc acc)) 0 ts)))))
+      (is (= 3 (reduce-right-set (fn [_ acc] (inc acc)) 0 ts)))))
 
   (testing "Суммирование длин правой сверткой"
     (let [ts (trie-set "a" "ab" "abc")]
       (is (= 6 (reduce-right-set (fn [word acc] (+ (count word) acc)) 0 ts)))))
 
   (testing "Сбор в список правой сверткой"
-    (let [ts (trie-set "cat" "dog")]
-      (let [result (reduce-right-set (fn [word acc] (conj acc word)) [] ts)]
-        (is (= 2 (count result)))
-        (is (= #{"cat" "dog"} (set result)))))))
+    (let [ts (trie-set "cat" "dog")
+          result (reduce-right-set (fn [word acc] (conj acc word)) [] ts)]
+      (is (= 2 (count result)))
+      (is (= #{"cat" "dog"} (set result))))))
 

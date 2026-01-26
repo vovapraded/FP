@@ -2,12 +2,13 @@
   (:require [lab2.basic :as basic]
             [lab2.combining :as combining]
             [lab2.functional :as functional]
-            [lab2.node :as node])
+            [lab2.node :as node]
+            [clojure.string :as str])
   (:import (clojure.lang IFn IPersistentCollection IPersistentSet IReduce IReduceInit Seqable)))
 
 (deftype TrieSet [root-node]
   IPersistentSet
-  (contains [this key]
+  (contains [_ key]
     (basic/trie-contains? root-node (str key)))
 
   (disjoin [this key]
@@ -16,7 +17,7 @@
         this
         (TrieSet. new-root))))
 
-  (get [this key]
+  (get [_ key]
     (when (basic/trie-contains? root-node (str key))
       (str key)))
 
@@ -27,24 +28,24 @@
         this
         (TrieSet. new-root))))
 
-  (count [this]
+  (count [_]
     (basic/trie-size root-node))
 
-  (empty [this]
+  (empty [_]
     (TrieSet. node/empty-node))
 
-  (equiv [this other]
+  (equiv [_ other]
     (and (instance? TrieSet other)
          (= (basic/trie-size root-node) (basic/trie-size (.root-node other)))
          (every? #(basic/trie-contains? (.root-node other) %) (basic/trie-to-seq root-node))))
 
   Seqable
-  (seq [this]
+  (seq [_]
     (when-not (basic/trie-empty? root-node)
       (basic/trie-to-seq root-node)))
 
   IFn
-  (invoke [this key]
+  (invoke [_ key]
     (basic/trie-contains? root-node (str key)))
 
   IReduce
@@ -55,26 +56,22 @@
         (f))))
 
   IReduceInit
-  (reduce [this f init]
+  (reduce [_ f init]
     (functional/trie-reduce-left f init root-node))
 
 
   Object
-  (toString [this]
-    (str "#{" (clojure.string/join " " (map pr-str (basic/trie-to-seq root-node))) "}"))
+  (toString [_]
+    (str "#{" (str/join " " (map pr-str (basic/trie-to-seq root-node))) "}"))
 
   (equals [this other]
     (and (instance? TrieSet other)
          (.equiv this other)))
 
-  (hashCode [this]
+  (hashCode [_]
     (reduce + (map hash (basic/trie-to-seq root-node)))))
 
-;; Конструкторы
-(defn ->TrieSet
-  "Конструктор TrieSet"
-  [root-node]
-  (TrieSet. root-node))
+;; Конструкторы удален дубликат ->TrieSet, так как он автоматически создается deftype
 
 (defn trie-set
   "Создает новый TrieSet из переданных элементов"

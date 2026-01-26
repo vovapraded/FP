@@ -1,6 +1,6 @@
 (ns lab2.combining-test
-  (:require [clojure.test :refer :all]
-            [lab2.core :refer :all]))
+  (:require [clojure.test :refer [deftest is testing]]
+            [lab2.core :refer [trie-set trie-set-union trie-set-union-all]]))
 
 (deftest trie-set-sequence-test
   (testing "Множество с словами с общими префиксами"
@@ -90,9 +90,9 @@
       (is (.equiv empty1 empty2))))
 
   (testing "toString представление"
-    (let [ts (trie-set "apple" "banana")]
-      (let [str-repr (.toString ts)]
-        (is (.startsWith str-repr "#{"))
-        (is (.endsWith str-repr "}"))
-        (is (.contains str-repr "apple"))
-        (is (.contains str-repr "banana"))))))              ; добавляем недостающую закрывающую скобку для deftest
+    (let [ts (trie-set "apple" "banana")
+          str-repr (.toString ts)]
+      (is (.startsWith str-repr "#{"))
+      (is (.endsWith str-repr "}"))
+      (is (.contains str-repr "apple"))
+      (is (.contains str-repr "banana")))))

@@ -1,7 +1,8 @@
 (ns lab2.trie-set-test
   (:require [clojure.set :as set]
-            [clojure.test :refer :all]
-            [lab2.core :refer :all]))
+            [clojure.test :refer [deftest is testing]]
+            [lab2.core :refer [from-seq trie-set trie-set-union]]
+            [clojure.string :as str]))
 
 (deftest trie-set-creation-test
   (testing "Создание пустого TrieSet"
@@ -13,7 +14,7 @@
   (testing "Создание TrieSet с элементами"
     (let [ts (trie-set "cat" "dog" "bird")]
       (is (= 3 (count ts)))
-      (is (not (empty? ts)))
+      (is (seq ts))
       (is (= #{"cat" "dog" "bird"} (set (seq ts))))))
 
   (testing "Создание из последовательности"
@@ -92,12 +93,12 @@
       (is (.equiv ts4 (trie-set)))))
 
   (testing "toString представление"
-    (let [ts (trie-set "apple" "banana")]
-      (let [str-repr (.toString ts)]
-        (is (.startsWith str-repr "#{"))
-        (is (.endsWith str-repr "}"))
-        (is (.contains str-repr "apple"))
-        (is (.contains str-repr "banana"))))))
+    (let [ts (trie-set "apple" "banana")
+          str-repr (.toString ts)]
+      (is (.startsWith str-repr "#{"))
+      (is (.endsWith str-repr "}"))
+      (is (.contains str-repr "apple"))
+      (is (.contains str-repr "banana")))))
 
 (deftest trie-set-standard-set-operations-test
   (testing "Совместимость с clojure.set/union"
@@ -123,7 +124,7 @@
         (is (= ["apple"] (vec filtered))))
 
       ;; map
-      (let [mapped (map clojure.string/upper-case ts)]
+      (let [mapped (map str/upper-case ts)]
         (is (= 4 (count mapped)))
         (is (every? #(.equals (.toUpperCase %) %) mapped)))
 
