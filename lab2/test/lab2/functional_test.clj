@@ -161,4 +161,3 @@
           result (reduce-right-set (fn [word acc] (conj acc word)) [] ts)]
       (is (= 2 (count result)))
       (is (= #{"cat" "dog"} (set result))))))
-

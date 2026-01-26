@@ -105,7 +105,6 @@
     (let [ts1 (trie-set "a" "b")
           ts2 (trie-set "b" "c")
           regular-set #{:x :y}]
-      ;; union между TrieSet работает через наш метод
       (let [union-result (trie-set-union ts1 ts2)]
         (is (= 3 (count union-result)))
         (is (contains? union-result "a"))
@@ -140,10 +139,6 @@
       (is (contains? extended "new1"))
       (is (contains? extended "new2")))))
 
-
-
-
-
 (deftest trie-set-reduce-protocols-test
   (testing "IReduceInit протокол - reduce с начальным значением"
     (let [ts (trie-set "apple" "banana" "cherry")]
@@ -175,4 +170,3 @@
       (let [combined (reduce str ts)]
         (is (string? combined))
         (is (= 10 (count combined)))))))                    ; cat(3) + dog(3) + bird(4) = 10
-

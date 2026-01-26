@@ -5,7 +5,6 @@
             [lab2.node :as node]
             [lab2.trie-set :as trie-set]))
 
-
 ;; Конструкторы TrieSet
 (def trie-set
   "Создает TrieSet из переданных строк.
@@ -72,6 +71,10 @@
 ;; Операции объединения для TrieNode
 (def trie-union combining/trie-union)
 (def trie-union-all combining/trie-union-all)
+
+;; Операции сравнения для TrieNode
+(def trie-intersection combining/trie-intersection)
+(def trie-difference combining/trie-difference)
 
 ;; Функциональные операции для TrieNode
 (def trie-reduce-left functional/trie-reduce-left)

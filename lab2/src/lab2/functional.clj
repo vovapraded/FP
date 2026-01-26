@@ -20,7 +20,6 @@
                       (:children current-node))))]
     (reduce-impl init trie "")))
 
-
 (defn trie-reduce-right
   "Правая свертка trie - применяет функцию к каждому слову в обратном порядке обхода дерева.
    f - функция (word acc) -> new-acc, принимающая слово первым аргументом
@@ -29,27 +28,27 @@
   [f init trie]
   (letfn [(collect-words [current-node prefix]
             (let [current-word (if (:terminal? current-node) [prefix] [])
-                  child-words (->> (:children current-node)
-                                   (mapcat (fn [[ch child-node]]
-                                             (collect-words child-node (str prefix ch)))))]
+                  child-words (mapcat
+                               (fn [[ch child-node]] (collect-words child-node (str prefix ch)))
+                               (:children current-node))]
               (concat child-words current-word)))]
     (let [all-words (collect-words trie "")]
       (reduce (fn [acc word] (f word acc)) init (reverse all-words)))))
-
 
 (defn trie-filter [pred trie]
   (letfn [(filter-nodes [node prefix]
             (let [keep-word? (and (:terminal? node) (pred prefix))
 
                   [new-children children-count]
-                  (->> (:children node)
-                       (reduce (fn [[children-acc count-acc] [ch child]]
-                                 (let [filtered-child (filter-nodes child (str prefix ch))]
-                                   (if (basic/trie-empty? filtered-child)
-                                     [children-acc count-acc]
-                                     [(assoc children-acc ch filtered-child)
-                                      (+ count-acc (:count filtered-child))])))
-                               [{} 0]))
+                  (reduce
+                   (fn [[children-acc count-acc] [ch child]]
+                     (let [filtered-child (filter-nodes child (str prefix ch))]
+                       (if (basic/trie-empty? filtered-child)
+                         [children-acc count-acc]
+                         [(assoc children-acc ch filtered-child)
+                          (+ count-acc (:node-count filtered-child))])))
+                   [{} 0]
+                   (:children node))
 
                   new-count (+ children-count (if keep-word? 1 0))]
 

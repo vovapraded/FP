@@ -27,7 +27,7 @@
           rest-word (rest word)
           child-node (node/get-or-create-child node ch)
           updated-child (trie-insert child-node rest-word)
-          count-delta (- (:count updated-child) (:count child-node))]
+          count-delta (- (:node-count updated-child) (:node-count child-node))]
 
       (-> node
           (assoc-in [:children ch] updated-child)
@@ -51,9 +51,9 @@
         node
 
         (let [updated-child (trie-remove child rest-word)
-              delta (- (:count updated-child) (:count child))]
+              delta (- (:node-count updated-child) (:node-count child))]
           (-> node
-              (assoc :children (if (zero? (:count updated-child))
+              (assoc :children (if (zero? (:node-count updated-child))
                                  (dissoc (:children node) ch)
                                  (assoc (:children node) ch updated-child)))
               (node/update-count delta)))))))
@@ -61,12 +61,12 @@
 (defn trie-size
   "Возвращает количество слов в trie"
   [node]
-  (:count node))
+  (:node-count node))
 
 (defn trie-empty?
   "Проверяет, пуст ли trie"
   [node]
-  (= (:count node) 0))
+  (zero? (:node-count node)))
 
 (defn trie-to-seq
   "Преобразует trie в последовательность слов"

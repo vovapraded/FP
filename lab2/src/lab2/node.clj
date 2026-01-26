@@ -1,7 +1,7 @@
 (ns lab2.node)
 
 ;; Узел дерева
-(defrecord TrieNode [children terminal? count])
+(defrecord TrieNode [children terminal? node-count])
 
 (defn make-node
   "Создание нового узла trie"
@@ -25,4 +25,4 @@
 (defn update-count
   "Обновить счетчик узла на заданную дельту"
   [node delta]
-  (update node :count + delta))
+  (update node :node-count + delta))

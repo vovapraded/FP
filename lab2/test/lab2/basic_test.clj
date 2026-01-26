@@ -74,4 +74,3 @@
       (is (ts "test"))
       (is (ts "data"))
       (is (not (ts "missing"))))))
-

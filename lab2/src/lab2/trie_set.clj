@@ -59,7 +59,6 @@
   (reduce [_ f init]
     (functional/trie-reduce-left f init root-node))
 
-
   Object
   (toString [_]
     (str "#{" (str/join " " (map pr-str (basic/trie-to-seq root-node))) "}"))
@@ -120,7 +119,6 @@
   (let [mapped-node (functional/trie-map f (.root-node trie-set))]
     (TrieSet. mapped-node)))
 
-
 (defn reduce-left-set
   "Левая свертка TrieSet - обрабатывает элементы слева направо"
   [f init trie-set]
@@ -130,5 +128,3 @@
   "Правая свертка TrieSet - обрабатывает элементы справа налево"
   [f init trie-set]
   (functional/trie-reduce-right f init (.root-node trie-set)))
-
-
