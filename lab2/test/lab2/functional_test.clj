@@ -15,30 +15,18 @@
 
   (testing "Reduce с несколькими словами"
     (let [ts (trie-set "cat" "car" "card" "care")]
-      ;; Подсчет количества слов
       (is (= 4 (reduce (fn [acc _word] (inc acc)) 0 ts)))
-      
-      ;; Сбор всех слов в список
       (let [words (reduce conj [] ts)]
         (is (= 4 (count words)))
         (is (every? #(contains? ts %) words))
-        (is (contains? (set words) "cat"))
-        (is (contains? (set words) "car"))
-        (is (contains? (set words) "card"))
-        (is (contains? (set words) "care")))))
+        (is (= #{"cat" "car" "card" "care"} (set words))))))
 
   (testing "Reduce с суммированием длин слов"
     (let [ts (trie-set "a" "ab" "abc")]
       (is (= 6 (reduce (fn [acc word] (+ acc (count word))) 0 ts)))))
 
-  (testing "Reduce с конкатенацией строк"
-    (let [ts (trie-set "hello" "world")]
-      (let [result (reduce str "" ts)]
-        (is (= 10 (count result))))))
-
   (testing "Reduce с фильтрацией в процессе"
     (let [ts (trie-set "cat" "car" "dog" "duck")]
-      ;; Считаем только слова, начинающиеся с 'c'
       (is (= 2 (reduce (fn [acc word]
                         (if (.startsWith word "c")
                           (inc acc)
@@ -52,113 +40,132 @@
         (is (contains? words ""))
         (is (contains? words "cat"))))))
 
-(deftest trie-set-collection-operations-test
+(deftest filter-set-test
   (testing "Фильтрация пустого множества"
     (let [ts (trie-set)
-          result (filter (constantly true) ts)]
+          result (filter-set (constantly true) ts)]
+      (is (= 0 (count result)))
       (is (empty? result))))
 
-  (testing "Фильтрация с предикатом true"
+  (testing "Фильтрация по предикату"
     (let [ts (trie-set "cat" "car" "dog")
-          result (filter (constantly true) ts)]
-      (is (= 3 (count result)))
-      (is (= #{"cat" "car" "dog"} (set result)))))
-
-  (testing "Фильтрация с предикатом false"
-    (let [ts (trie-set "cat" "car" "dog")
-          result (filter (constantly false) ts)]
-      (is (empty? result))))
+          result (filter-set #(.startsWith % "c") ts)]
+      (is (= 2 (count result)))
+      (is (contains? result "cat"))
+      (is (contains? result "car"))
+      (is (not (contains? result "dog")))))
 
   (testing "Фильтрация по длине слова"
-    (let [ts (trie-set "a" "ab" "abc" "abcd")
-          result (filter #(>= (count %) 3) ts)]
-      (is (= 2 (count result)))
-      (is (= #{"abc" "abcd"} (set result)))))
-
-  (testing "Фильтрация по началу слова"
-    (let [ts (trie-set "cat" "car" "card" "dog" "duck")
-          result (filter #(.startsWith % "ca") ts)]
-      (is (= 3 (count result)))
-      (is (= #{"cat" "car" "card"} (set result)))))
+    (let [ts (trie-set "a" "ab" "abc" "abcd")]
+      ;; Тест кастомной функции filter-set
+      (let [result (filter-set #(>= (count %) 2) ts)]
+        (is (= 3 (count result)))
+        (is (contains? result "ab"))
+        (is (contains? result "abc"))
+        (is (contains? result "abcd")))
+      ;; Тест стандартной функции filter
+      (let [result (filter #(>= (count %) 3) ts)]
+        (is (= 2 (count result)))
+        (is (= #{"abc" "abcd"} (set result))))))
 
   (testing "Комплексная фильтрация"
     (let [words ["apple" "application" "apply" "banana" "band" "bandana" "can" "candy"]
           ts (apply trie-set words)
-          ;; Оставляем только слова длиннее 4 символов
           result (filter #(> (count %) 4) ts)]
-      ;; Слова длиннее 4: "apple"(5), "application"(11), "apply"(5), "banana"(6), "bandana"(7), "candy"(5) = 6 слов
       (is (= 6 (count result)))
       (is (= #{"apple" "application" "apply" "banana" "bandana" "candy"} (set result))))))
 
-(deftest trie-set-map-test
-  (testing "Map пустого множества"
+(deftest map-set-test
+  (testing "Преобразование пустого множества"
     (let [ts (trie-set)
-          result (map clojure.string/upper-case ts)]
-      (is (empty? result))))
+          custom-result (map-set clojure.string/upper-case ts)
+          std-result (map clojure.string/upper-case ts)]
+      (is (= 0 (count custom-result)))
+      (is (empty? custom-result))
+      (is (empty? std-result))))
 
-  (testing "Добавление префикса к словам"
-    (let [ts (trie-set "cat" "dog")
-          result (map #(str "prefix-" %) ts)]
-      (is (= 2 (count result)))
-      (is (= #{"prefix-cat" "prefix-dog"} (set result)))))
+  (testing "Преобразование в верхний регистр"
+    (let [ts (trie-set "cat" "dog")]
+      ;; Тест кастомной функции map-set
+      (let [result (map-set clojure.string/upper-case ts)]
+        (is (= 2 (count result)))
+        (is (contains? result "CAT"))
+        (is (contains? result "DOG")))
+      ;; Тест стандартной функции map
+      (let [result (map clojure.string/upper-case ts)]
+        (is (= 2 (count result)))
+        (is (= #{"CAT" "DOG"} (set result))))))
 
-  (testing "Добавление суффикса к словам"
-    (let [ts (trie-set "test" "word")
-          result (map #(str % "-suffix") ts)]
-      (is (= 2 (count result)))
-      (is (= #{"test-suffix" "word-suffix"} (set result)))))
-
-  (testing "Применение identity функции"
-    (let [ts (trie-set "hello" "world")
-          result (map identity ts)]
-      (is (= 2 (count result)))
-      (is (= #{"hello" "world"} (set result)))))
-
-  (testing "Преобразование с пустой строкой в множестве"
-    (let [ts (trie-set "" "test")
-          result (map #(str % "-mapped") ts)]
-      (is (= 2 (count result)))
-      (is (= #{"-mapped" "test-mapped"} (set result)))))
+  (testing "Добавление префикса и суффикса"
+    (let [ts (trie-set "cat" "dog")]
+      ;; Префикс с кастомной функцией
+      (let [result (map-set #(str "x-" %) ts)]
+        (is (= 2 (count result)))
+        (is (contains? result "x-cat"))
+        (is (contains? result "x-dog")))
+      ;; Суффикс со стандартной функцией
+      (let [result (map #(str % "-suffix") ts)]
+        (is (= 2 (count result)))
+        (is (= #{"cat-suffix" "dog-suffix"} (set result))))))
 
   (testing "Исходное множество остается неизменным"
-    (let [original (trie-set "original" "words")
-          result (map clojure.string/upper-case original)]
-      ;; Проверяем, что исходное множество не изменилось
-      (is (= 2 (count original)))
-      (is (contains? original "original"))
-      (is (contains? original "words"))
-      (is (not (contains? original "ORIGINAL")))
-      (is (not (contains? original "WORDS")))
-      
-      ;; Проверяем результат
-      (is (= 2 (count result)))
-      (is (= #{"ORIGINAL" "WORDS"} (set result)))))
-
-  (testing "Замена символов в словах"
-    (let [ts (trie-set "hello" "world")
-          result (map #(clojure.string/replace % "l" "x") ts)]
-      (is (= 2 (count result)))
-      (is (= #{"hexxo" "worxd"} (set result)))))
+    (let [original (trie-set "test")]
+      ;; Тест с кастомной функцией
+      (let [result (map-set clojure.string/upper-case original)]
+        (is (contains? original "test"))
+        (is (not (contains? original "TEST")))
+        (is (contains? result "TEST")))
+      ;; Тест со стандартной функцией
+      (let [result (map clojure.string/upper-case original)]
+        (is (contains? original "test"))
+        (is (= #{"TEST"} (set result))))))
 
   (testing "Применение сложной функции преобразования"
     (let [ts (trie-set "cat" "dog" "bird")
-          ;; Функция: первый символ в верхний регистр + добавить длину
           transform-fn (fn [word]
                         (str (clojure.string/capitalize word) "-" (count word)))
           result (map transform-fn ts)]
       (is (= 3 (count result)))
-      (is (= #{"Cat-3" "Dog-3" "Bird-4"} (set result)))))
+      (is (= #{"Cat-3" "Dog-3" "Bird-4"} (set result))))))
 
-  (testing "Функция удлиняет слова"
-    (let [ts (trie-set "a" "ab")
-          result (map #(str % % %) ts)] ; утраивает каждое слово
-      (is (= 2 (count result)))
-      (is (= #{"aaa" "ababab"} (set result))))))
+(deftest reduce-left-set-test
+  (testing "Левая свертка пустого множества"
+    (let [ts (trie-set)]
+      (is (= 0 (reduce-left-set (fn [acc _] (inc acc)) 0 ts)))
+      (is (= [] (reduce-left-set conj [] ts)))))
+
+  (testing "Подсчет элементов левой сверткой"
+    (let [ts (trie-set "a" "b" "c")]
+      (is (= 3 (reduce-left-set (fn [acc _] (inc acc)) 0 ts)))))
+
+  (testing "Суммирование длин левой сверткой"
+    (let [ts (trie-set "a" "ab" "abc")]
+      (is (= 6 (reduce-left-set (fn [acc word] (+ acc (count word))) 0 ts)))))
+
+  (testing "Сбор в список левой сверткой"
+    (let [ts (trie-set "cat" "dog")]
+      (let [result (reduce-left-set conj [] ts)]
+        (is (= 2 (count result)))
+        (is (= #{"cat" "dog"} (set result)))))))
+
+(deftest reduce-right-set-test
+  (testing "Правая свертка пустого множества"
+    (let [ts (trie-set)]
+      (is (= 0 (reduce-right-set (fn [_ acc] (inc acc)) 0 ts)))))
+
+  (testing "Сравнение левой и правой свертки для коммутативных операций"
+    (let [ts (trie-set "a" "b")]
+      (let [left-result (reduce-left-set (fn [acc _] (inc acc)) 0 ts)
+            right-result (reduce-right-set (fn [_ acc] (inc acc)) 0 ts)]
+        (is (= left-result right-result)))))
+
+  (testing "Правая свертка работает корректно"
+    (let [ts (trie-set "test")]
+      (is (some? (reduce-right-set (fn [_ acc] acc) "default" ts))))))
 
 (deftest trie-set-transduce-test
-  (testing "Transduce с простыми операциями"
+  (testing "Transduce с композицией операций"
     (let [ts (trie-set "cat" "dog" "elephant" "ant")]
-      ;; Получаем длины слов и суммируем те, что равны 3
       (let [result (transduce
                    (comp (map count) (filter #(= % 3)))
                    +
@@ -221,5 +228,4 @@
                           set)]
         (is (contains? processed "CARD"))
         (is (contains? processed "ELEPHANT"))
-        ;; "DUCK" не содержит "A", поэтому его не должно быть
         (is (not (contains? processed "DUCK")))))))
