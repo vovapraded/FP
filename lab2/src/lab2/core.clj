@@ -35,9 +35,13 @@
   "Преобразует элементы TrieSet функцией и возвращает новый TrieSet"
   trie-set/map-set)
 
-(def fold-set
-  "Свертка TrieSet - применяет функцию к каждому слову в TrieSet и аккумулирует результат"
-  trie-set/fold-set)
+(def reduce-left-set
+  "Левая свертка TrieSet - обрабатывает элементы слева направо"
+  trie-set/reduce-left-set)
+
+(def reduce-right-set
+  "Правая свертка TrieSet - обрабатывает элементы справа налево"
+  trie-set/reduce-right-set)
 
 ;; Конструктор для внутреннего использования
 (def ->TrieSet trie-set/->TrieSet)
@@ -71,5 +75,7 @@
 
 ;; Функциональные операции для TrieNode
 (def trie-fold functional/trie-fold)
+(def trie-reduce-left functional/trie-reduce-left)
+(def trie-reduce-right functional/trie-reduce-right)
 (def trie-filter functional/trie-filter)
 (def trie-map functional/trie-map)

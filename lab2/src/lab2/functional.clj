@@ -2,23 +2,41 @@
   (:require [lab2.node :as node]
             [lab2.basic :as basic]))
 
-(defn trie-fold
-  "Свертка trie - применяет функцию к каждому слову в trie и аккумулирует результат.
-   f - функция, принимающая аккумулятор и слово
+(defn trie-reduce-left
+  "Левая свертка trie - применяет функцию к каждому слову в порядке обхода дерева.
+   f - функция (acc word) -> new-acc, принимающая аккумулятор СЛЕВА
    init - начальное значение аккумулятора
    trie - дерево для свертки"
   [f init trie]
-  (letfn [(fold-impl [acc current-node prefix]
+  (letfn [(reduce-impl [acc current-node prefix]
+            ;; Сначала обрабатываем текущий узел (если он терминальный)
             (let [acc-after-current (if (:terminal? current-node)
                                       (f acc prefix)
                                       acc)]
-              (->> (:children current-node)
-                   (reduce (fn [current-acc [ch child-node]]
-                             (fold-impl current-acc child-node (str prefix ch)))
-                           acc-after-current))))]
-    (fold-impl init trie "")))
+              ;; Затем рекурсивно обрабатываем детей СЛЕВА НАПРАВО
+              (reduce (fn [current-acc [ch child-node]]
+                        (reduce-impl current-acc child-node (str prefix ch)))
+                      acc-after-current
+                      (:children current-node))))]
+    (reduce-impl init trie "")))
 
 
+(defn trie-reduce-right [f init trie]
+  (letfn [(reduce-right-impl [current-node prefix]
+            (let [child-results (->> (:children current-node)
+                                     (map (fn [[ch child-node]]
+                                            (reduce-right-impl child-node (str prefix ch))))
+                                     (reverse)) ; Обрабатываем детей справа налево
+
+                  current-result (if (:terminal? current-node)
+                                   (f prefix (reduce #(f %2 %1) init child-results))
+                                   (reduce #(f %2 %1) init child-results))]
+              current-result))]
+    (reduce-right-impl trie "")))
+
+
+;; Алиас для обратной совместимости
+(def trie-fold trie-reduce-left)
 
 (defn trie-filter [pred trie]
   (letfn [(filter-nodes [node prefix]

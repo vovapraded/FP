@@ -56,12 +56,7 @@
 
   IReduceInit
   (reduce [this f init]
-    (functional/trie-fold f init root-node))
-
-  IKVReduce
-  (kvreduce [this f init]
-    ;; Для Set, key и value одинаковые
-    (functional/trie-fold (fn [acc word] (f acc word word)) init root-node))
+    (functional/trie-reduce-left f init root-node))
 
   Object
   (toString [this]
@@ -127,7 +122,14 @@
   (let [mapped-node (functional/trie-map f (.root-node trie-set))]
     (TrieSet. mapped-node)))
 
-(defn fold-set
-  "Свертка TrieSet - применяет функцию к каждому слову в TrieSet и аккумулирует результат"
+
+(defn reduce-left-set
+  "Левая свертка TrieSet - обрабатывает элементы слева направо"
   [f init trie-set]
-  (functional/trie-fold f init (.root-node trie-set)))
+  (functional/trie-reduce-left f init (.root-node trie-set)))
+
+(defn reduce-right-set
+  "Правая свертка TrieSet - обрабатывает элементы справа налево"
+  [f init trie-set]
+  (functional/trie-reduce-right f init (.root-node trie-set)))
+
