@@ -1,10 +1,9 @@
 (ns lab2.combining
-  (:require [clojure.set :as set]
-            [lab2.node :as node :refer [->TrieNode]]
-            [lab2.basic :as basic]
-            [lab2.functional :as functional]))
+  (:require [lab2.basic :as basic]
+            [lab2.functional :as functional]
+            [lab2.node :as node]))
 
-(defn trie-set 
+(defn trie-set
   [& words]
   (reduce basic/trie-insert node/empty-node words))
 

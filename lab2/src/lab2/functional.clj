@@ -1,6 +1,6 @@
 (ns lab2.functional
-  (:require [lab2.node :as node]
-            [lab2.basic :as basic]))
+  (:require [lab2.basic :as basic]
+            [lab2.node :as node]))
 
 (defn trie-reduce-left
   "Левая свертка trie - применяет функцию к каждому слову в порядке обхода дерева.
@@ -26,7 +26,7 @@
             (let [child-results (->> (:children current-node)
                                      (map (fn [[ch child-node]]
                                             (reduce-right-impl child-node (str prefix ch))))
-                                     (reverse)) ; Обрабатываем детей справа налево
+                                     (reverse))             ; Обрабатываем детей справа налево
 
                   current-result (if (:terminal? current-node)
                                    (f prefix (reduce #(f %2 %1) init child-results))
@@ -57,6 +57,6 @@
 
 (defn trie-map [f trie]
   (trie-reduce-left (fn [acc word]
-               (basic/trie-insert acc (f word)))
-             node/empty-node
-             trie))
+                      (basic/trie-insert acc (f word)))
+                    node/empty-node
+                    trie))

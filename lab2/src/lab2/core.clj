@@ -1,8 +1,8 @@
 (ns lab2.core
-  (:require [lab2.node :as node]
-            [lab2.basic :as basic]
+  (:require [lab2.basic :as basic]
             [lab2.combining :as combining]
             [lab2.functional :as functional]
+            [lab2.node :as node]
             [lab2.trie-set :as trie-set]))
 
 

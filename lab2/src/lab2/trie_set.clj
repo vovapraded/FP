@@ -1,21 +1,21 @@
 (ns lab2.trie-set
-  (:require [lab2.node :as node]
-            [lab2.basic :as basic]
+  (:require [lab2.basic :as basic]
             [lab2.combining :as combining]
-            [lab2.functional :as functional])
-  (:import (clojure.lang IPersistentSet IPersistentCollection Seqable Counted IFn IReduce IReduceInit ISeq)))
+            [lab2.functional :as functional]
+            [lab2.node :as node])
+  (:import (clojure.lang IFn IPersistentCollection IPersistentSet IReduce IReduceInit Seqable)))
 
 (deftype TrieSet [root-node]
   IPersistentSet
   (contains [this key]
     (basic/trie-contains? root-node (str key)))
-  
+
   (disjoin [this key]
     (let [new-root (basic/trie-remove root-node (str key))]
       (if (identical? root-node new-root)
         this
         (TrieSet. new-root))))
-  
+
   (get [this key]
     (when (basic/trie-contains? root-node (str key))
       (str key)))
@@ -26,13 +26,13 @@
       (if (identical? root-node new-root)
         this
         (TrieSet. new-root))))
-  
+
   (count [this]
     (basic/trie-size root-node))
-  
+
   (empty [this]
     (TrieSet. node/empty-node))
-  
+
   (equiv [this other]
     (and (instance? TrieSet other)
          (= (basic/trie-size root-node) (basic/trie-size (.root-node other)))
@@ -62,11 +62,11 @@
   Object
   (toString [this]
     (str "#{" (clojure.string/join " " (map pr-str (basic/trie-to-seq root-node))) "}"))
-  
+
   (equals [this other]
     (and (instance? TrieSet other)
          (.equiv this other)))
-  
+
   (hashCode [this]
     (reduce + (map hash (basic/trie-to-seq root-node)))))
 

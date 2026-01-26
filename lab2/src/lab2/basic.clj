@@ -1,7 +1,7 @@
 (ns lab2.basic
   (:require [lab2.node :as node]))
 
-(defn trie-contains? 
+(defn trie-contains?
   "Проверяет, содержит ли trie заданное слово"
   [node word]
   (if (empty? word)
@@ -13,7 +13,7 @@
         (trie-contains? child rest-word)
         false))))
 
-(defn trie-insert 
+(defn trie-insert
   "Вставляет слово в trie"
   [node word]
   (if (empty? word)
@@ -21,7 +21,7 @@
       node                                                  ; слово уже есть
       (-> node
           (assoc :terminal? true)
-          (node/update-count 1)))                          ; новое слово
+          (node/update-count 1)))                           ; новое слово
 
     (let [ch (first word)
           rest-word (rest word)
@@ -33,7 +33,7 @@
           (assoc-in [:children ch] updated-child)
           (node/update-count count-delta)))))
 
-(defn trie-remove 
+(defn trie-remove
   "Удаляет слово из trie"
   [node word]
   (if (empty? word)

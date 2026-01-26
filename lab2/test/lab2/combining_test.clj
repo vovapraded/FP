@@ -79,7 +79,7 @@
 (deftest trie-set-equality-and-equiv-test
   (testing "Равенство множеств"
     (let [ts1 (trie-set "cat" "dog")
-          ts2 (trie-set "dog" "cat") ; порядок не важен
+          ts2 (trie-set "dog" "cat")                        ; порядок не важен
           ts3 (trie-set "cat" "bird")]
       (is (.equiv ts1 ts2))
       (is (not (.equiv ts1 ts3)))))
@@ -95,4 +95,4 @@
         (is (.startsWith str-repr "#{"))
         (is (.endsWith str-repr "}"))
         (is (.contains str-repr "apple"))
-        (is (.contains str-repr "banana")))))) ; добавляем недостающую закрывающую скобку для deftest
+        (is (.contains str-repr "banana"))))))              ; добавляем недостающую закрывающую скобку для deftest

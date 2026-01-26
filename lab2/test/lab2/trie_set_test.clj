@@ -1,7 +1,7 @@
 (ns lab2.trie-set-test
-  (:require [clojure.test :refer :all]
-            [lab2.core :refer :all]
-            [clojure.set :as set]))
+  (:require [clojure.set :as set]
+            [clojure.test :refer :all]
+            [lab2.core :refer :all]))
 
 (deftest trie-set-creation-test
   (testing "Создание пустого TrieSet"
@@ -27,19 +27,19 @@
     (let [ts (trie-set)
           ts1 (conj ts "hello")
           ts2 (conj ts1 "world")
-          ts3 (conj ts2 "hello")] ; дубликат
+          ts3 (conj ts2 "hello")]                           ; дубликат
       (is (= 1 (count ts1)))
       (is (= 2 (count ts2)))
-      (is (= 2 (count ts3))) ; дубликат не добавился
+      (is (= 2 (count ts3)))                                ; дубликат не добавился
       (is (contains? ts3 "hello"))
       (is (contains? ts3 "world"))))
 
   (testing "disj операция"
     (let [ts (trie-set "cat" "dog" "bird")
           ts1 (disj ts "dog")
-          ts2 (disj ts1 "missing")] ; удаление несуществующего
+          ts2 (disj ts1 "missing")]                         ; удаление несуществующего
       (is (= 2 (count ts1)))
-      (is (= 2 (count ts2))) ; размер не изменился
+      (is (= 2 (count ts2)))                                ; размер не изменился
       (is (not (contains? ts1 "dog")))
       (is (contains? ts1 "cat"))
       (is (contains? ts1 "bird"))))
@@ -71,7 +71,7 @@
         (is (not (nil? seq-result)))
         (is (= 3 (count seq-result)))
         (is (= #{"zebra" "apple" "banana"} (set seq-result))))
-      
+
       ;; Пустое множество должно возвращать nil для seq
       (is (nil? (seq (trie-set))))))
 
@@ -83,7 +83,7 @@
 (deftest trie-set-equality-test
   (testing "Равенство TrieSet"
     (let [ts1 (trie-set "cat" "dog")
-          ts2 (trie-set "dog" "cat") ; порядок не важен
+          ts2 (trie-set "dog" "cat")                        ; порядок не важен
           ts3 (trie-set "cat" "bird")
           ts4 (trie-set)]
       (is (.equiv ts1 ts2))
@@ -110,7 +110,7 @@
         (is (contains? union-result "a"))
         (is (contains? union-result "b"))
         (is (contains? union-result "c")))
-      
+
       ;; Проверка что TrieSet ведет себя как set в стандартных операциях
       (let [ts-as-set (set (seq ts1))
             standard-union (set/union ts-as-set regular-set)]
@@ -121,19 +121,19 @@
       ;; filter
       (let [filtered (filter #(.startsWith % "a") ts)]
         (is (= ["apple"] (vec filtered))))
-      
+
       ;; map
       (let [mapped (map clojure.string/upper-case ts)]
         (is (= 4 (count mapped)))
         (is (every? #(.equals (.toUpperCase %) %) mapped)))
-      
+
       ;; reduce
       (let [total-length (reduce + (map count ts))]
         (is (= (+ 5 6 6 4) total-length)))))
 
   (testing "Работа с into"
     (let [ts (trie-set "initial")
-          extended (into ts ["new1" "new2" "initial"])] ; initial - дубликат
+          extended (into ts ["new1" "new2" "initial"])]     ; initial - дубликат
       (is (= 3 (count extended)))
       (is (contains? extended "initial"))
       (is (contains? extended "new1"))
@@ -148,30 +148,30 @@
     (let [ts (trie-set "apple" "banana" "cherry")]
       ;; Подсчет общей длины всех строк
       (let [total-length (reduce (fn [acc word] (+ acc (count word))) 0 ts)]
-        (is (= (+ 5 6 6) total-length))) ; apple=5, banana=6, cherry=6
-      
+        (is (= (+ 5 6 6) total-length)))                    ; apple=5, banana=6, cherry=6
+
       ;; Сбор всех слов в вектор
       (let [collected (reduce conj [] ts)]
         (is (= 3 (count collected)))
         (is (= (set collected) #{"apple" "banana" "cherry"})))
-      
+
       ;; Конкатенация строк
       (let [concatenated (reduce str "" ts)]
         (is (string? concatenated))
-        (is (= 17 (count concatenated)))))) ; apple+banana+cherry = 5+6+6=17
+        (is (= 17 (count concatenated))))))                 ; apple+banana+cherry = 5+6+6=17
 
   (testing "IReduce протокол - reduce без начального значения"
     (let [ts (trie-set "cat" "dog" "bird")]
       ;; Поиск самого длинного слова
       (let [longest (reduce (fn [acc word]
-                             (if (> (count word) (count acc))
-                               word
-                               acc))
-                           ts)]
-        (is (= "bird" longest))) ; все слова длиной 3-4, bird = 4
-      
+                              (if (> (count word) (count acc))
+                                word
+                                acc))
+                            ts)]
+        (is (= "bird" longest)))                            ; все слова длиной 3-4, bird = 4
+
       ;; Объединение в одну строку
       (let [combined (reduce str ts)]
         (is (string? combined))
-        (is (= 10 (count combined))))))) ; cat(3) + dog(3) + bird(4) = 10
+        (is (= 10 (count combined)))))))                    ; cat(3) + dog(3) + bird(4) = 10
 
