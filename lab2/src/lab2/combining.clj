@@ -1,35 +1,16 @@
 (ns lab2.combining
   (:require [clojure.set :as set]
             [lab2.node :as node :refer [->TrieNode]]
-            [lab2.basic :as basic]))
+            [lab2.basic :as basic]
+            [lab2.functional :as functional]))
 
 (defn trie-set 
   [& words]
   (reduce basic/trie-insert node/empty-node words))
 
-(defn trie-union 
-  [trie1 trie2]
-  (cond
-    (basic/trie-empty? trie1) trie2
-    (basic/trie-empty? trie2) trie1
-    :else (letfn [(children-union [children1 children2]
-                    (->> (set/union (set (keys children1))
-                                    (set (keys children2)))
-                         (reduce (fn [acc ch]
-                                   (let [child1 (get children1 ch)
-                                         child2 (get children2 ch)]
-                                     (cond
-                                       (and child1 child2) (assoc acc ch (trie-union child1 child2))
-                                       child1 (assoc acc ch child1)
-                                       child2 (assoc acc ch child2))))
-                                 {})))]
+(defn trie-union [set1 set2]
+  (functional/trie-reduce-left basic/trie-insert set1 set2))
 
-            (let [merged-children (children-union (:children trie1) (:children trie2))
-                  terminal? (or (:terminal? trie1) (:terminal? trie2))
-                  children-count (reduce + (map :count (vals merged-children)))
-                  total-count (if terminal? (inc children-count) children-count)]
-
-              (->TrieNode merged-children terminal? total-count)))))
 
 (defn trie-union-all
   [& tries]
