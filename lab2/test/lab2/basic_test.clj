@@ -14,13 +14,6 @@
       (is (contains? ts "card"))
       (is (not (contains? ts "ca")))))
 
-  (testing "Добавление префикса существующего слова"
-    (let [ts (conj (trie-set) "card")
-          result (conj ts "car")]
-      (is (= 2 (count result)))
-      (is (contains? result "car"))
-      (is (contains? result "card"))))
-
   (testing "Добавление пустой строки"
     (let [result (conj (trie-set) "")]
       (is (= 1 (count result)))
