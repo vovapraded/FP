@@ -1,16 +1,63 @@
 (ns lab2.core
   (:require [lab2.node :as node]
             [lab2.basic :as basic]
-            [lab2.combining :as combining]))
+            [lab2.combining :as combining]
+            [lab2.functional :as functional]
+            [lab2.trie-set :as trie-set]))
 
-;; Экспорт базовых функций узлов
+
+;; Конструкторы TrieSet
+(def trie-set
+  "Создает TrieSet из переданных строк.
+   Пример: (trie-set \"cat\" \"car\" \"card\")
+   Без аргументов создает пустое множество: (trie-set)"
+  trie-set/trie-set)
+
+(def from-seq
+  "Создает TrieSet из последовательности строк"
+  trie-set/from-seq)
+
+;; Операции над TrieSet
+(def trie-set-union
+  "Объединяет два TrieSet"
+  trie-set/union)
+
+(def trie-set-union-all
+  "Объединяет несколько TrieSet"
+  trie-set/union-all)
+
+;; Функциональные операции, возвращающие TrieSet
+(def filter-set
+  "Фильтрует TrieSet по предикату и возвращает новый TrieSet"
+  trie-set/filter-set)
+
+(def map-set
+  "Преобразует элементы TrieSet функцией и возвращает новый TrieSet"
+  trie-set/map-set)
+
+(def fold-set
+  "Свертка TrieSet - применяет функцию к каждому слову в TrieSet и аккумулирует результат"
+  trie-set/fold-set)
+
+;; Конструктор для внутреннего использования
+(def ->TrieSet trie-set/->TrieSet)
+
+;; Функции преобразования между TrieSet и TrieNode (для совместимости)
+(def from-trie-node trie-set/from-trie-node)
+(def to-trie-node trie-set/to-trie-node)
+
+;; =============================================================================
+;; TrieNode - низкоуровневые операции
+;; =============================================================================
+
+;; Базовые функции узлов (для внутреннего использования)
 (def make-node node/make-node)
 (def empty-node node/empty-node)
 (def get-or-create-child node/get-or-create-child)
 (def get-child node/get-child)
 (def update-count node/update-count)
 
-;; Экспорт базовых операций
+;; Базовые операции над TrieNode (для совместимости с существующим кодом)
 (def trie-contains? basic/trie-contains?)
 (def trie-insert basic/trie-insert)
 (def trie-remove basic/trie-remove)
@@ -18,7 +65,11 @@
 (def trie-empty? basic/trie-empty?)
 (def trie-to-seq basic/trie-to-seq)
 
-;; Экспорт операций объединения
-(def trie-set combining/trie-set)
+;; Операции объединения для TrieNode
 (def trie-union combining/trie-union)
 (def trie-union-all combining/trie-union-all)
+
+;; Функциональные операции для TrieNode
+(def trie-fold functional/trie-fold)
+(def trie-filter functional/trie-filter)
+(def trie-map functional/trie-map)

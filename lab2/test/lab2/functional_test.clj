@@ -1,234 +1,225 @@
 (ns lab2.functional-test
   (:require [clojure.test :refer :all]
-            [lab2.core :refer :all]
-            [lab2.functional :as func]))
+            [lab2.core :refer :all]))
 
-(deftest trie-fold-test
-  (testing "Свертка пустого trie"
-    (is (= 0 (func/trie-fold + 0 empty-node)))
-    (is (= [] (func/trie-fold conj [] empty-node))))
+(deftest trie-set-reduce-test
+  (testing "Reduce пустого множества"
+    (let [ts (trie-set)]
+      (is (= 0 (reduce (fn [acc _word] (inc acc)) 0 ts)))
+      (is (= [] (reduce conj [] ts)))))
 
-  (testing "Свертка с одним словом"
-    (let [trie (trie-insert empty-node "cat")]
-      (is (= 1 (func/trie-fold (fn [acc _word] (inc acc)) 0 trie)))
-      (is (= ["cat"] (func/trie-fold conj [] trie)))))
+  (testing "Reduce с одним словом"
+    (let [ts (trie-set "cat")]
+      (is (= 1 (reduce (fn [acc _word] (inc acc)) 0 ts)))
+      (is (= ["cat"] (reduce conj [] ts)))))
 
-  (testing "Свертка с несколькими словами"
-    (let [trie (-> empty-node
-                   (trie-insert "cat")
-                   (trie-insert "car")
-                   (trie-insert "card")
-                   (trie-insert "care"))]
+  (testing "Reduce с несколькими словами"
+    (let [ts (trie-set "cat" "car" "card" "care")]
       ;; Подсчет количества слов
-      (is (= 4 (func/trie-fold (fn [acc _word] (inc acc)) 0 trie)))
+      (is (= 4 (reduce (fn [acc _word] (inc acc)) 0 ts)))
       
       ;; Сбор всех слов в список
-      (let [words (func/trie-fold conj [] trie)]
+      (let [words (reduce conj [] ts)]
         (is (= 4 (count words)))
-        (is (every? #(trie-contains? trie %) words))
+        (is (every? #(contains? ts %) words))
         (is (contains? (set words) "cat"))
         (is (contains? (set words) "car"))
         (is (contains? (set words) "card"))
         (is (contains? (set words) "care")))))
 
-  (testing "Свертка с суммированием длин слов"
-    (let [trie (-> empty-node
-                   (trie-insert "a")
-                   (trie-insert "ab")
-                   (trie-insert "abc"))]
-      (is (= 6 (func/trie-fold (fn [acc word] (+ acc (count word))) 0 trie)))))
+  (testing "Reduce с суммированием длин слов"
+    (let [ts (trie-set "a" "ab" "abc")]
+      (is (= 6 (reduce (fn [acc word] (+ acc (count word))) 0 ts)))))
 
-  (testing "Свертка с конкатенацией строк"
-    (let [trie (-> empty-node
-                   (trie-insert "hello")
-                   (trie-insert "world"))]
-      (let [result (func/trie-fold str "" trie)]
-        (is (or (= "helloworld" result)
-                (= "worldhello" result))))))
+  (testing "Reduce с конкатенацией строк"
+    (let [ts (trie-set "hello" "world")]
+      (let [result (reduce str "" ts)]
+        (is (= 10 (count result))))))
 
-  (testing "Свертка с фильтрацией в процессе"
-    (let [trie (-> empty-node
-                   (trie-insert "cat")
-                   (trie-insert "car")
-                   (trie-insert "dog")
-                   (trie-insert "duck"))]
+  (testing "Reduce с фильтрацией в процессе"
+    (let [ts (trie-set "cat" "car" "dog" "duck")]
       ;; Считаем только слова, начинающиеся с 'c'
-      (is (= 2 (func/trie-fold (fn [acc word]
-                                 (if (.startsWith word "c")
-                                   (inc acc)
-                                   acc))
-                               0 trie)))))
+      (is (= 2 (reduce (fn [acc word]
+                        (if (.startsWith word "c")
+                          (inc acc)
+                          acc))
+                       0 ts)))))
 
-  (testing "Свертка с пустой строкой в trie"
-    (let [trie (-> empty-node
-                   (trie-insert "")
-                   (trie-insert "cat"))]
-      (is (= 2 (func/trie-fold (fn [acc _word] (inc acc)) 0 trie)))
-      (let [words (set (func/trie-fold conj [] trie))]
+  (testing "Reduce с пустой строкой в множестве"
+    (let [ts (trie-set "" "cat")]
+      (is (= 2 (reduce (fn [acc _word] (inc acc)) 0 ts)))
+      (let [words (set (reduce conj [] ts))]
         (is (contains? words ""))
         (is (contains? words "cat"))))))
 
-(deftest trie-filter-test
-  (testing "Фильтрация пустого trie"
-    (let [result (func/trie-filter (constantly true) empty-node)]
-      (is (trie-empty? result))))
+(deftest trie-set-collection-operations-test
+  (testing "Фильтрация пустого множества"
+    (let [ts (trie-set)
+          result (filter (constantly true) ts)]
+      (is (empty? result))))
 
-  (testing "Фильтрация с предикатом, который всегда возвращает true"
-    (let [trie (-> empty-node
-                   (trie-insert "cat")
-                   (trie-insert "car")
-                   (trie-insert "dog"))
-          result (func/trie-filter (constantly true) trie)]
-      (is (= 3 (trie-size result)))
-      (is (trie-contains? result "cat"))
-      (is (trie-contains? result "car"))
-      (is (trie-contains? result "dog"))))
+  (testing "Фильтрация с предикатом true"
+    (let [ts (trie-set "cat" "car" "dog")
+          result (filter (constantly true) ts)]
+      (is (= 3 (count result)))
+      (is (= #{"cat" "car" "dog"} (set result)))))
 
-  (testing "Фильтрация с предикатом, который всегда возвращает false"
-    (let [trie (-> empty-node
-                   (trie-insert "cat")
-                   (trie-insert "car")
-                   (trie-insert "dog"))
-          result (func/trie-filter (constantly false) trie)]
-      (is (trie-empty? result))))
+  (testing "Фильтрация с предикатом false"
+    (let [ts (trie-set "cat" "car" "dog")
+          result (filter (constantly false) ts)]
+      (is (empty? result))))
 
   (testing "Фильтрация по длине слова"
-    (let [trie (-> empty-node
-                   (trie-insert "a")
-                   (trie-insert "ab")
-                   (trie-insert "abc")
-                   (trie-insert "abcd"))
-          result (func/trie-filter #(>= (count %) 3) trie)]
-      (is (= 2 (trie-size result)))
-      (is (trie-contains? result "abc"))
-      (is (trie-contains? result "abcd"))
-      (is (not (trie-contains? result "a")))
-      (is (not (trie-contains? result "ab")))))
+    (let [ts (trie-set "a" "ab" "abc" "abcd")
+          result (filter #(>= (count %) 3) ts)]
+      (is (= 2 (count result)))
+      (is (= #{"abc" "abcd"} (set result)))))
 
   (testing "Фильтрация по началу слова"
-    (let [trie (-> empty-node
-                   (trie-insert "cat")
-                   (trie-insert "car")
-                   (trie-insert "card")
-                   (trie-insert "dog")
-                   (trie-insert "duck"))
-          result (func/trie-filter #(.startsWith % "ca") trie)]
-      (is (= 3 (trie-size result)))
-      (is (trie-contains? result "cat"))
-      (is (trie-contains? result "car"))
-      (is (trie-contains? result "card"))
-      (is (not (trie-contains? result "dog")))
-      (is (not (trie-contains? result "duck")))))
+    (let [ts (trie-set "cat" "car" "card" "dog" "duck")
+          result (filter #(.startsWith % "ca") ts)]
+      (is (= 3 (count result)))
+      (is (= #{"cat" "car" "card"} (set result)))))
 
-
-  (testing "Фильтрация trie"
+  (testing "Комплексная фильтрация"
     (let [words ["apple" "application" "apply" "banana" "band" "bandana" "can" "candy"]
-          trie (reduce trie-insert empty-node words)
+          ts (apply trie-set words)
           ;; Оставляем только слова длиннее 4 символов
-          result (func/trie-filter #(> (count %) 4) trie)]
+          result (filter #(> (count %) 4) ts)]
       ;; Слова длиннее 4: "apple"(5), "application"(11), "apply"(5), "banana"(6), "bandana"(7), "candy"(5) = 6 слов
-      (is (= 6 (trie-size result)))
-      (is (trie-contains? result "apple"))
-      (is (trie-contains? result "application"))
-      (is (trie-contains? result "apply"))
-      (is (trie-contains? result "banana"))
-      (is (trie-contains? result "bandana"))
-      (is (trie-contains? result "candy"))
-      (is (not (trie-contains? result "band"))) ; длина 4
-      (is (not (trie-contains? result "can")))))) ; длина 3
+      (is (= 6 (count result)))
+      (is (= #{"apple" "application" "apply" "banana" "bandana" "candy"} (set result))))))
 
-(deftest trie-map-test
-  (testing "Применение функции к пустому trie"
-    (let [result (func/trie-map clojure.string/upper-case empty-node)]
-      (is (trie-empty? result))))
-
+(deftest trie-set-map-test
+  (testing "Map пустого множества"
+    (let [ts (trie-set)
+          result (map clojure.string/upper-case ts)]
+      (is (empty? result))))
 
   (testing "Добавление префикса к словам"
-    (let [trie (-> empty-node
-                   (trie-insert "cat")
-                   (trie-insert "dog"))
-          result (func/trie-map #(str "prefix-" %) trie)]
-      (is (= 2 (trie-size result)))
-      (is (trie-contains? result "prefix-cat"))
-      (is (trie-contains? result "prefix-dog"))
-      (is (not (trie-contains? result "cat")))
-      (is (not (trie-contains? result "dog")))))
+    (let [ts (trie-set "cat" "dog")
+          result (map #(str "prefix-" %) ts)]
+      (is (= 2 (count result)))
+      (is (= #{"prefix-cat" "prefix-dog"} (set result)))))
 
   (testing "Добавление суффикса к словам"
-    (let [trie (-> empty-node
-                   (trie-insert "test")
-                   (trie-insert "word"))
-          result (func/trie-map #(str % "-suffix") trie)]
-      (is (= 2 (trie-size result)))
-      (is (trie-contains? result "test-suffix"))
-      (is (trie-contains? result "word-suffix"))))
+    (let [ts (trie-set "test" "word")
+          result (map #(str % "-suffix") ts)]
+      (is (= 2 (count result)))
+      (is (= #{"test-suffix" "word-suffix"} (set result)))))
 
   (testing "Применение identity функции"
-    (let [trie (-> empty-node
-                   (trie-insert "hello")
-                   (trie-insert "world"))
-          result (func/trie-map identity trie)]
-      (is (= 2 (trie-size result)))
-      (is (trie-contains? result "hello"))
-      (is (trie-contains? result "world"))))
+    (let [ts (trie-set "hello" "world")
+          result (map identity ts)]
+      (is (= 2 (count result)))
+      (is (= #{"hello" "world"} (set result)))))
 
+  (testing "Преобразование с пустой строкой в множестве"
+    (let [ts (trie-set "" "test")
+          result (map #(str % "-mapped") ts)]
+      (is (= 2 (count result)))
+      (is (= #{"-mapped" "test-mapped"} (set result)))))
 
-  (testing "Преобразование с пустой строкой в trie"
-    (let [trie (-> empty-node
-                   (trie-insert "")
-                   (trie-insert "test"))
-          result (func/trie-map #(str % "-mapped") trie)]
-      (is (= 2 (trie-size result)))
-      (is (trie-contains? result "-mapped")) ; пустая строка + суффикс
-      (is (trie-contains? result "test-mapped"))))
-
-  (testing "Исходный trie остается неизменным"
-    (let [original (-> empty-node
-                       (trie-insert "original")
-                       (trie-insert "words"))
-          result (func/trie-map clojure.string/upper-case original)]
-      ;; Проверяем, что исходный trie не изменился
-      (is (= 2 (trie-size original)))
-      (is (trie-contains? original "original"))
-      (is (trie-contains? original "words"))
-      (is (not (trie-contains? original "ORIGINAL")))
-      (is (not (trie-contains? original "WORDS")))
+  (testing "Исходное множество остается неизменным"
+    (let [original (trie-set "original" "words")
+          result (map clojure.string/upper-case original)]
+      ;; Проверяем, что исходное множество не изменилось
+      (is (= 2 (count original)))
+      (is (contains? original "original"))
+      (is (contains? original "words"))
+      (is (not (contains? original "ORIGINAL")))
+      (is (not (contains? original "WORDS")))
       
       ;; Проверяем результат
-      (is (= 2 (trie-size result)))
-      (is (trie-contains? result "ORIGINAL"))
-      (is (trie-contains? result "WORDS"))))
+      (is (= 2 (count result)))
+      (is (= #{"ORIGINAL" "WORDS"} (set result)))))
 
   (testing "Замена символов в словах"
-    (let [trie (-> empty-node
-                   (trie-insert "hello")
-                   (trie-insert "world"))
-          result (func/trie-map #(clojure.string/replace % "l" "x") trie)]
-      (is (= 2 (trie-size result)))
-      (is (trie-contains? result "hexxo"))
-      (is (trie-contains? result "worxd"))))
+    (let [ts (trie-set "hello" "world")
+          result (map #(clojure.string/replace % "l" "x") ts)]
+      (is (= 2 (count result)))
+      (is (= #{"hexxo" "worxd"} (set result)))))
 
   (testing "Применение сложной функции преобразования"
-    (let [trie (-> empty-node
-                   (trie-insert "cat")
-                   (trie-insert "dog")
-                   (trie-insert "bird"))
+    (let [ts (trie-set "cat" "dog" "bird")
           ;; Функция: первый символ в верхний регистр + добавить длину
           transform-fn (fn [word]
-                         (str (clojure.string/capitalize word) "-" (count word)))
-          result (func/trie-map transform-fn trie)]
-      (is (= 3 (trie-size result)))
-      (is (trie-contains? result "Cat-3"))
-      (is (trie-contains? result "Dog-3"))
-      (is (trie-contains? result "Bird-4"))))
-
+                        (str (clojure.string/capitalize word) "-" (count word)))
+          result (map transform-fn ts)]
+      (is (= 3 (count result)))
+      (is (= #{"Cat-3" "Dog-3" "Bird-4"} (set result)))))
 
   (testing "Функция удлиняет слова"
-    (let [trie (-> empty-node
-                   (trie-insert "a")
-                   (trie-insert "ab"))
-          result (func/trie-map #(str % % %) trie)] ; утраивает каждое слово
-      (is (= 2 (trie-size result)))
-      (is (trie-contains? result "aaa"))
-      (is (trie-contains? result "ababab")))))
+    (let [ts (trie-set "a" "ab")
+          result (map #(str % % %) ts)] ; утраивает каждое слово
+      (is (= 2 (count result)))
+      (is (= #{"aaa" "ababab"} (set result))))))
 
+(deftest trie-set-transduce-test
+  (testing "Transduce с простыми операциями"
+    (let [ts (trie-set "cat" "dog" "elephant" "ant")]
+      ;; Получаем длины слов и суммируем те, что равны 3
+      (let [result (transduce
+                   (comp (map count) (filter #(= % 3)))
+                   +
+                   0
+                   ts)]
+        (is (= 9 result))))) ; 3 слова длиной 3 = 3+3+3=9
+
+  (testing "Into с трансдьюсером"
+    (let [ts (trie-set "apple" "banana" "cherry")]
+      (let [upper-words (into []
+                             (map clojure.string/upper-case)
+                             ts)]
+        (is (= 3 (count upper-words)))
+        (is (every? #(.equals (.toUpperCase %) %) upper-words))))))
+
+(deftest trie-set-standard-functions-test
+  (testing "Использование стандартных функций для работы с коллекциями"
+    (let [ts (trie-set "apple" "banana" "cherry" "date")]
+      
+      ;; some - проверка существования элемента с условием
+      (is (some #(.startsWith % "a") ts))
+      (is (not (some #(.startsWith % "x") ts)))
+      
+      ;; every? - проверка всех элементов
+      (is (every? string? ts))
+      (is (not (every? #(> (count %) 5) ts)))
+      
+      ;; take/drop с seq
+      (let [seq-ts (seq ts)]
+        (is (= 2 (count (take 2 seq-ts))))
+        (is (<= (count (drop 2 seq-ts)) 2)))
+      
+      ;; group-by
+      (let [grouped (group-by first ts)]
+        (is (contains? grouped \a))
+        (is (contains? grouped \b))
+        (is (contains? grouped \c))
+        (is (contains? grouped \d)))
+      
+      ;; sort
+      (let [sorted (sort (seq ts))]
+        (is (= "apple" (first sorted)))))))
+
+(deftest trie-set-functional-composition-test
+  (testing "Композиция функциональных операций"
+    (let [ts (trie-set "cat" "car" "card" "dog" "duck" "elephant")]
+      
+      ;; Фильтрация + map + reduce
+      (let [result (->> ts
+                       (filter #(.startsWith % "c"))
+                       (map count)
+                       (reduce +))]
+        (is (= 10 result))) ; "cat"(3) + "car"(3) + "card"(4) = 10
+      
+      ;; Более сложная цепочка
+      (let [processed (->> ts
+                          (filter #(> (count %) 3))
+                          (map clojure.string/upper-case)
+                          (filter #(.contains % "A"))
+                          set)]
+        (is (contains? processed "CARD"))
+        (is (contains? processed "ELEPHANT"))
+        ;; "DUCK" не содержит "A", поэтому его не должно быть
+        (is (not (contains? processed "DUCK")))))))
