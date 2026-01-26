@@ -173,23 +173,5 @@
       ;; Объединение в одну строку
       (let [combined (reduce str ts)]
         (is (string? combined))
-        (is (= 10 (count combined)))))) ; cat(3) + dog(3) + bird(4) = 10
-
-  (testing "IKVReduce протокол - для set key=value"
-    (let [ts (trie-set "one" "two" "three")]
-      ;; Подсчет элементов через kvreduce
-      (let [count-via-kv (reduce-kv (fn [acc k v]
-                                     (and (= k v) ; для set key должен равняться value
-                                          (inc acc)))
-                                   0
-                                   ts)]
-        (is (= 3 count-via-kv)))
-      
-      ;; Сбор ключей и значений (должны быть одинаковые)
-      (let [kv-pairs (reduce-kv (fn [acc k v]
-                                 (conj acc [k v]))
-                               []
-                               ts)]
-        (is (= 3 (count kv-pairs)))
-        (is (every? (fn [[k v]] (= k v)) kv-pairs))))))
+        (is (= 10 (count combined))))))) ; cat(3) + dog(3) + bird(4) = 10
 

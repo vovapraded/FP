@@ -74,7 +74,6 @@
 (def trie-union-all combining/trie-union-all)
 
 ;; Функциональные операции для TrieNode
-(def trie-fold functional/trie-fold)
 (def trie-reduce-left functional/trie-reduce-left)
 (def trie-reduce-right functional/trie-reduce-right)
 (def trie-filter functional/trie-filter)

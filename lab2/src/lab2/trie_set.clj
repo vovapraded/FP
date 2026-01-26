@@ -3,7 +3,7 @@
             [lab2.basic :as basic]
             [lab2.combining :as combining]
             [lab2.functional :as functional])
-  (:import (clojure.lang IPersistentSet IPersistentCollection Seqable Counted IFn IReduce IReduceInit IKVReduce ISeq)))
+  (:import (clojure.lang IPersistentSet IPersistentCollection Seqable Counted IFn IReduce IReduceInit ISeq)))
 
 (deftype TrieSet [root-node]
   IPersistentSet
@@ -57,6 +57,7 @@
   IReduceInit
   (reduce [this f init]
     (functional/trie-reduce-left f init root-node))
+
 
   Object
   (toString [this]
@@ -132,4 +133,5 @@
   "Правая свертка TrieSet - обрабатывает элементы справа налево"
   [f init trie-set]
   (functional/trie-reduce-right f init (.root-node trie-set)))
+
 

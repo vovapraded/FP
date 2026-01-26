@@ -35,9 +35,6 @@
     (reduce-right-impl trie "")))
 
 
-;; Алиас для обратной совместимости
-(def trie-fold trie-reduce-left)
-
 (defn trie-filter [pred trie]
   (letfn [(filter-nodes [node prefix]
             (let [keep-word? (and (:terminal? node) (pred prefix))
@@ -59,7 +56,7 @@
     (filter-nodes trie "")))
 
 (defn trie-map [f trie]
-  (trie-fold (fn [acc word]
+  (trie-reduce-left (fn [acc word]
                (basic/trie-insert acc (f word)))
              node/empty-node
              trie))
