@@ -22,17 +22,18 @@
 
 
 (defn trie-reduce-right [f init trie]
-  (letfn [(reduce-right-impl [current-node prefix]
-            (let [child-results (->> (:children current-node)
-                                     (map (fn [[ch child-node]]
-                                            (reduce-right-impl child-node (str prefix ch))))
-                                     (reverse))             ; Обрабатываем детей справа налево
-
-                  current-result (if (:terminal? current-node)
-                                   (f prefix (reduce #(f %2 %1) init child-results))
-                                   (reduce #(f %2 %1) init child-results))]
-              current-result))]
-    (reduce-right-impl trie "")))
+  "Правая свертка trie - применяет функцию к каждому слову в обратном порядке обхода дерева.
+   f - функция (word acc) -> new-acc, принимающая слово ПЕРВЫМ аргументом
+   init - начальное значение аккумулятора
+   trie - дерево для свертки"
+  (letfn [(collect-words [current-node prefix]
+            (let [current-word (if (:terminal? current-node) [prefix] [])
+                  child-words (->> (:children current-node)
+                                   (mapcat (fn [[ch child-node]]
+                                             (collect-words child-node (str prefix ch)))))]
+              (concat child-words current-word)))]
+    (let [all-words (collect-words trie "")]
+      (reduce (fn [acc word] (f word acc)) init (reverse all-words)))))
 
 
 (defn trie-filter [pred trie]

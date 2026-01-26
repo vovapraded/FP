@@ -144,15 +144,20 @@
 (deftest reduce-right-set-test
   (testing "Правая свертка пустого множества"
     (let [ts (trie-set)]
-      (is (= 0 (reduce-right-set (fn [_ acc] (inc acc)) 0 ts)))))
+      (is (= 0 (reduce-right-set (fn [word acc] (inc acc)) 0 ts)))
+      (is (= [] (reduce-right-set (fn [word acc] (conj acc word)) [] ts)))))
 
-  (testing "Сравнение левой и правой свертки для коммутативных операций"
-    (let [ts (trie-set "a" "b")]
-      (let [left-result (reduce-left-set (fn [acc _] (inc acc)) 0 ts)
-            right-result (reduce-right-set (fn [_ acc] (inc acc)) 0 ts)]
-        (is (= left-result right-result)))))
+  (testing "Подсчет элементов правой сверткой"
+    (let [ts (trie-set "a" "b" "c")]
+      (is (= 3 (reduce-right-set (fn [word acc] (inc acc)) 0 ts)))))
 
-  (testing "Правая свертка работает корректно"
-    (let [ts (trie-set "test")]
-      (is (some? (reduce-right-set (fn [_ acc] acc) "default" ts))))))
+  (testing "Суммирование длин правой сверткой"
+    (let [ts (trie-set "a" "ab" "abc")]
+      (is (= 6 (reduce-right-set (fn [word acc] (+ (count word) acc)) 0 ts)))))
+
+  (testing "Сбор в список правой сверткой"
+    (let [ts (trie-set "cat" "dog")]
+      (let [result (reduce-right-set (fn [word acc] (conj acc word)) [] ts)]
+        (is (= 2 (count result)))
+        (is (= #{"cat" "dog"} (set result)))))))
 
