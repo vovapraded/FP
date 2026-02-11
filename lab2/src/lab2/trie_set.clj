@@ -70,7 +70,7 @@
   (hashCode [_]
     (reduce + (map hash (basic/trie-to-seq root-node)))))
 
-;; Конструкторы удален дубликат ->TrieSet, так как он автоматически создается deftype
+;; Конструкторы
 
 (defn trie-set
   "Создает новый TrieSet из переданных элементов"

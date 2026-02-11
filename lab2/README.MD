@@ -35,7 +35,7 @@
   - [`trie_set_test.clj`](test/lab2/trie_set_test.clj)
   - [`combining_test.clj`](test/lab2/combining_test.clj)
 
-4. **Property-based тестирование** - НЕ РЕАЛИЗОВАНО
+4. **Property-based тестирование** - реализовано в [`property_test.clj`](test/lab2/property_test.clj): 10 свойств, включая все моноидальные свойства
 
 5. **Полиморфность** - реализована в [`trie_set.clj`](src/lab2/trie_set.clj) через протоколы `IPersistentSet`, `IPersistentCollection`, `IReduce`, `Seqable`
 
@@ -60,31 +60,22 @@
 - [`reduce-left-set`](src/lab2/core.clj#L37) - Левая свертка TrieSet - обрабатывает элементы слева направо
 - [`reduce-right-set`](src/lab2/core.clj#L41) - Правая свертка TrieSet - обрабатывает элементы справа налево
 
-### Функции преобразования и совместимости
+### Функции преобразования из/в внутреннее API
 - [`from-trie-node`](src/lab2/core.clj#L46) - Преобразует TrieNode в TrieSet
 - [`to-trie-node`](src/lab2/core.clj#L47) - Преобразует TrieSet в TrieNode
 
-### Базовые операции TrieNode (для совместимости)
-- [`trie-contains?`](src/lab2/core.clj#L61) - Проверка наличия элемента в TrieNode
-- [`trie-insert`](src/lab2/core.clj#L62) - Вставка элемента в TrieNode
-- [`trie-remove`](src/lab2/core.clj#L63) - Удаление элемента из TrieNode
-- [`trie-size`](src/lab2/core.clj#L64) - Получение размера TrieNode
-- [`trie-empty?`](src/lab2/core.clj#L65) - Проверка пустоты TrieNode
-- [`trie-to-seq`](src/lab2/core.clj#L66) - Преобразование TrieNode в последовательность
+### Базовые операции множеств (стандартные методы Clojure)
+- `contains?` - Проверка наличия элемента в TrieSet (метод протокола `IPersistentSet`)
+- `conj` - Добавление элемента в TrieSet (метод протокола `IPersistentCollection`)
+- `disj` - Удаление элемента из TrieSet (метод протокола `IPersistentSet`)
+- `count` - Получение размера TrieSet (метод протокола `IPersistentCollection`)
+- `empty?` - Проверка пустоты TrieSet (стандартная функция Clojure)
+- `seq` - Преобразование TrieSet в последовательность (метод протокола `Seqable`)
 
-### Операции объединения для TrieNode
-- [`trie-union`](src/lab2/core.clj#L69) - Объединение двух TrieNode
-- [`trie-union-all`](src/lab2/core.clj#L70) - Объединение множества TrieNode
-
-### Операции сравнения для TrieNode
-- [`trie-intersection`](src/lab2/core.clj#L73) - Пересечение двух TrieNode
-- [`trie-difference`](src/lab2/core.clj#L74) - Разность двух TrieNode
-
-### Функциональные операции для TrieNode
-- [`trie-reduce-left`](src/lab2/core.clj#L77) - Левая свертка TrieNode
-- [`trie-reduce-right`](src/lab2/core.clj#L78) - Правая свертка TrieNode
-- [`trie-filter`](src/lab2/core.clj#L79) - Фильтрация TrieNode
-- [`trie-map`](src/lab2/core.clj#L80) - Отображение функции на TrieNode
+### Дополнительные операции сравнения TrieSet
+- `clojure.set/intersection` - Пересечение множеств (стандартная функция Clojure)
+- `clojure.set/difference` - Разность множеств (стандартная функция Clojure)
+- `clojure.set/union` - Объединение множеств (стандартная функция Clojure)
 
 ## Внутренний API
 
@@ -99,7 +90,18 @@
 
 ## Тестирование
 - Unit-тесты для всех операций: [`basic_test.clj`](test/lab2/basic_test.clj), [`functional_test.clj`](test/lab2/functional_test.clj), [`trie_set_test.clj`](test/lab2/trie_set_test.clj), [`combining_test.clj`](test/lab2/combining_test.clj)
-- Property-based тесты моноидальных свойств - НЕ РЕАЛИЗОВАНЫ:
-  - Ассоциативность: `(union (union a b) c) = (union a (union b c))`
-  - Нейтральный элемент: `(union empty-set a) = a`
-  - Идемпотентность: `(union a a) = a`
+- Property-based тесты ([`property_test.clj`](test/lab2/property_test.clj)) - 10 свойств (по 100 тестов каждое):
+
+### Моноидальные свойства:
+  - **Ассоциативность**: `(union (union a b) c) = (union a (union b c))`
+  - **Нейтральный элемент (слева)**: `(union empty-set a) = a`
+  - **Нейтральный элемент (справа)**: `(union a empty-set) = a`
+  - **Идемпотентность**: `(union a a) = a`
+
+### Дополнительные свойства:
+  - **Коммутативность**: `(union a b) = (union b a)`
+  - **Размер объединения**: `count(union a b) ≤ count(a) + count(b)`
+  - **Сохранение элементов**: объединение содержит все элементы исходных множеств
+  - **Консистентность вставки**: вставка увеличивает размер на 0 или 1
+  - **Консистентность удаления**: удаление уменьшает размер на 0 или 1
+  - **Согласованность seq и count**: `count(seq(set)) = count(set)`
