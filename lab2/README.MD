@@ -18,6 +18,31 @@
   - API должно быть реализовано для заданного интерфейса и оно не должно "протекать". На уровне тестов -- в первую очередь нужно протестировать именно API (dict, set, bag).
   - Должна быть эффективная реализация функции сравнения (не наивное приведение к спискам, их сортировка с последующим сравнением), реализованная на уровне API, а не внутреннего представления.
 
+## Реализация:
+
+1. **Функции**:
+  - добавление и удаление элементов - реализовано в [`basic.clj`](src/lab2/basic.clj): [`trie-insert`](src/lab2/basic.clj#L16) и [`trie-remove`](src/lab2/basic.clj#L36)
+  - фильтрация - реализована в [`functional.clj`](src/lab2/functional.clj): [`trie-filter`](src/lab2/functional.clj#L38)
+  - отображение (map) - реализовано в [`functional.clj`](src/lab2/functional.clj): [`trie-map`](src/lab2/functional.clj#L59)
+  - свертки (левая и правая) - реализованы в [`functional.clj`](src/lab2/functional.clj): [`trie-reduce-left`](src/lab2/functional.clj#L5) и [`trie-reduce-right`](src/lab2/functional.clj#L23)
+  - моноид - реализован через операции объединения в [`combining.clj`](src/lab2/combining.clj)
+
+2. **Неизменяемость структур данных** - реализовано через неизменяемые структуры [`TrieNode`](src/lab2/node.clj) и полиморфную обертку [`TrieSet`](src/lab2/trie_set.clj#L9)
+
+3. **Unit testing** - реализовано в тестах:
+  - [`basic_test.clj`](test/lab2/basic_test.clj)
+  - [`functional_test.clj`](test/lab2/functional_test.clj) 
+  - [`trie_set_test.clj`](test/lab2/trie_set_test.clj)
+  - [`combining_test.clj`](test/lab2/combining_test.clj)
+
+4. **Property-based тестирование** - НЕ РЕАЛИЗОВАНО
+
+5. **Полиморфность** - реализована в [`trie_set.clj`](src/lab2/trie_set.clj) через протоколы `IPersistentSet`, `IPersistentCollection`, `IReduce`, `Seqable`
+
+6. **Идиоматичный стиль** - реализован с использованием `deftype`, протоколов, неизменяемых структур
+
+7. **API требования** - реализовано через публичный фасад в [`core.clj`](src/lab2/core.clj), эффективное сравнение в [`trie_set.clj`](src/lab2/trie_set.clj#L37)
+
 ## Публичный API TrieSet
 
 Все публичные методы TrieSet указаны в файле [`core.clj`](src/lab2/core.clj).
@@ -73,4 +98,8 @@
 
 
 ## Тестирование
-- Unit-тесты для всех операций
+- Unit-тесты для всех операций: [`basic_test.clj`](test/lab2/basic_test.clj), [`functional_test.clj`](test/lab2/functional_test.clj), [`trie_set_test.clj`](test/lab2/trie_set_test.clj), [`combining_test.clj`](test/lab2/combining_test.clj)
+- Property-based тесты моноидальных свойств - НЕ РЕАЛИЗОВАНЫ:
+  - Ассоциативность: `(union (union a b) c) = (union a (union b c))`
+  - Нейтральный элемент: `(union empty-set a) = a`
+  - Идемпотентность: `(union a a) = a`
