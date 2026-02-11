@@ -42,9 +42,6 @@
   "Правая свертка TrieSet - обрабатывает элементы справа налево"
   trie-set/reduce-right-set)
 
-;; Конструктор для внутреннего использования
-(def ->TrieSet trie-set/->TrieSet)
-
 ;; Функции преобразования между TrieSet и TrieNode (для совместимости)
 (def from-trie-node trie-set/from-trie-node)
 (def to-trie-node trie-set/to-trie-node)

@@ -18,88 +18,59 @@
   - API должно быть реализовано для заданного интерфейса и оно не должно "протекать". На уровне тестов -- в первую очередь нужно протестировать именно API (dict, set, bag).
   - Должна быть эффективная реализация функции сравнения (не наивное приведение к спискам, их сортировка с последующим сравнением), реализованная на уровне API, а не внутреннего представления.
 
-## Ключевые элементы реализации
+## Публичный API TrieSet
 
-### Структура узла дерева
-```clojure
-;; node.clj
-(defrecord TrieNode [children terminal? count])
-```
+Все публичные методы TrieSet указаны в файле [`core.clj`](src/lab2/core.clj).
+### Конструкторы
+- [`trie-set`](src/lab2/core.clj#L9) - Создает TrieSet из переданных строк
+- [`from-seq`](src/lab2/core.clj#L15) - Создает TrieSet из последовательности строк
 
-### Базовые операции
-```clojure
-;; basic.clj
-(defn trie-insert [node word])      ; вставка слова
-(defn trie-remove [node word])      ; удаление слова
-(defn trie-contains? [node word])   ; проверка вхождения
-```
+### Операции объединения множеств
+- [`trie-set-union`](src/lab2/core.clj#L20) - Объединяет два TrieSet
+- [`trie-set-union-all`](src/lab2/core.clj#L24) - Объединяет несколько TrieSet
 
 ### Функциональные операции
-```clojure
-;; functional.clj
-(defn trie-reduce-left [f init trie])   ; левая свертка
-(defn trie-reduce-right [f init trie])  ; правая свертка
-(defn trie-filter [pred trie])          ; фильтрация
-(defn trie-map [f trie])               ; отображение
-```
+- [`filter-set`](src/lab2/core.clj#L29) - Фильтрует TrieSet по предикату и возвращает новый TrieSet
+- [`map-set`](src/lab2/core.clj#L33) - Преобразует элементы TrieSet функцией и возвращает новый TrieSet
+- [`reduce-left-set`](src/lab2/core.clj#L37) - Левая свертка TrieSet - обрабатывает элементы слева направо
+- [`reduce-right-set`](src/lab2/core.clj#L41) - Правая свертка TrieSet - обрабатывает элементы справа налево
 
-### Операции над множествами
-```clojure
-;; combining.clj
-(defn trie-union [set1 set2])           ; объединение множеств
-(defn trie-union-all [& tries])         ; объединение нескольких множеств
-(defn trie-intersection [trie1 trie2])  ; пересечение множеств
-(defn trie-difference [trie1 trie2])    ; разность множеств (trie1 - trie2)
-```
+### Функции преобразования и совместимости
+- [`from-trie-node`](src/lab2/core.clj#L46) - Преобразует TrieNode в TrieSet
+- [`to-trie-node`](src/lab2/core.clj#L47) - Преобразует TrieSet в TrieNode
 
-### Полиморфная обертка
-```clojure
-;; trie_set.clj
-(deftype TrieSet [root-node]
-  IPersistentSet
-  IPersistentCollection  
-  IReduce
-  Seqable)
-```
+### Базовые операции TrieNode (для совместимости)
+- [`trie-contains?`](src/lab2/core.clj#L61) - Проверка наличия элемента в TrieNode
+- [`trie-insert`](src/lab2/core.clj#L62) - Вставка элемента в TrieNode
+- [`trie-remove`](src/lab2/core.clj#L63) - Удаление элемента из TrieNode
+- [`trie-size`](src/lab2/core.clj#L64) - Получение размера TrieNode
+- [`trie-empty?`](src/lab2/core.clj#L65) - Проверка пустоты TrieNode
+- [`trie-to-seq`](src/lab2/core.clj#L66) - Преобразование TrieNode в последовательность
 
-### API
-```clojure
-;; core.clj - публичные функции
-(trie-set "cat" "car" "card")        ; конструктор
-(conj ts "new-word")                 ; добавление
-(disj ts "word")                     ; удаление
-(filter-set pred ts)                 ; фильтрация
-(map-set f ts)                       ; отображение
-(trie-set-union ts1 ts2)            ; объединение
-(trie-intersection ts1 ts2)          ; пересечение на уровне узлов
-(trie-difference ts1 ts2)            ; разность на уровне узлов
-```
+### Операции объединения для TrieNode
+- [`trie-union`](src/lab2/core.clj#L69) - Объединение двух TrieNode
+- [`trie-union-all`](src/lab2/core.clj#L70) - Объединение множества TrieNode
 
-## Операции над множествами
+### Операции сравнения для TrieNode
+- [`trie-intersection`](src/lab2/core.clj#L73) - Пересечение двух TrieNode
+- [`trie-difference`](src/lab2/core.clj#L74) - Разность двух TrieNode
 
-### Пересечение (Intersection)
-Возвращает новое множество, содержащее только элементы, присутствующие в обоих исходных множествах.
+### Функциональные операции для TrieNode
+- [`trie-reduce-left`](src/lab2/core.clj#L77) - Левая свертка TrieNode
+- [`trie-reduce-right`](src/lab2/core.clj#L78) - Правая свертка TrieNode
+- [`trie-filter`](src/lab2/core.clj#L79) - Фильтрация TrieNode
+- [`trie-map`](src/lab2/core.clj#L80) - Отображение функции на TrieNode
 
-```clojure
-(let [ts1 (trie-set "cat" "car" "card")
-      ts2 (trie-set "cat" "dog" "card")
-      result (trie-intersection (to-trie-node ts1) (to-trie-node ts2))]
-  (trie-to-seq result))  ; => ("cat" "card")
-```
+## Внутренний API
 
-### Разность (Difference)
-Возвращает новое множество, содержащее элементы из первого множества, которых нет во втором.
+### Файлы внутренней реализации:
+- [`node.clj`](src/lab2/node.clj) - Определяет структуру узлов Trie и вспомогательные функции для работы с ними
+- [`basic.clj`](src/lab2/basic.clj) - Базовые операции над узлами Trie (вставка, удаление, поиск, размер)
+- [`functional.clj`](src/lab2/functional.clj) - Функциональные операции (свертки, фильтрация, отображение)
+- [`combining.clj`](src/lab2/combining.clj) - Операции объединения множеств (union, intersection, difference)
+- [`trie_set.clj`](src/lab2/trie_set.clj) - Полиморфная обертка TrieSet, реализующая интерфейсы Clojure
+- [`core.clj`](src/lab2/core.clj) - API-фасад библиотеки, объединяющий все публичные функции в единую точку входа
 
-```clojure
-(let [ts1 (trie-set "cat" "car" "card")
-      ts2 (trie-set "cat" "dog")
-      result (trie-difference (to-trie-node ts1) (to-trie-node ts2))]
-  (trie-to-seq result))  ; => ("car" "card")
-```
 
 ## Тестирование
 - Unit-тесты для всех операций
-- Property-based тесты моноидальных свойств:
-  - Ассоциативность: `(union (union a b) c) = (union a (union b c))`
-  - Нейтральный элемент: `(union empty-set a) = a`
-  - Идемпотентность: `(union a a) = a`
