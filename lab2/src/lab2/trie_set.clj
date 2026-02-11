@@ -95,6 +95,16 @@
     (trie-set)
     (reduce union sets)))
 
+(defn intersection
+  "Пересечение двух TrieSet"
+  [set1 set2]
+  (TrieSet. (combining/trie-intersection (.root-node set1) (.root-node set2))))
+
+(defn difference
+  "Разность двух TrieSet (set1 - set2)"
+  [set1 set2]
+  (TrieSet. (combining/trie-difference (.root-node set1) (.root-node set2))))
+
 ;; Преобразования
 (defn to-trie-node
   "Извлекает TrieNode из TrieSet"

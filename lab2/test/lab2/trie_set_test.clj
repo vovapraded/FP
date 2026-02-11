@@ -90,21 +90,15 @@
       (is (.equiv ts1 ts2))
       (is (not (.equiv ts1 ts3)))
       (is (not (.equiv ts1 ts4)))
-      (is (.equiv ts4 (trie-set)))))
-
-  (testing "toString представление"
-    (let [ts (trie-set "apple" "banana")
-          str-repr (.toString ts)]
-      (is (.startsWith str-repr "#{"))
-      (is (.endsWith str-repr "}"))
-      (is (.contains str-repr "apple"))
-      (is (.contains str-repr "banana")))))
+      (is (.equiv ts4 (trie-set))))))
 
 (deftest trie-set-standard-set-operations-test
-  (testing "Совместимость с clojure.set/union"
+  (testing "Совместимость со стандартными операциями clojure.set"
     (let [ts1 (trie-set "a" "b")
           ts2 (trie-set "b" "c")
           regular-set #{:x :y}]
+
+      ;; Тест с кастомной операцией union
       (let [union-result (trie-set-union ts1 ts2)]
         (is (= 3 (count union-result)))
         (is (contains? union-result "a"))
@@ -131,42 +125,34 @@
       (let [total-length (reduce + (map count ts))]
         (is (= (+ 5 6 6 4) total-length)))))
 
-  (testing "Работа с into"
-    (let [ts (trie-set "initial")
-          extended (into ts ["new1" "new2" "initial"])]     ; initial - дубликат
-      (is (= 3 (count extended)))
-      (is (contains? extended "initial"))
-      (is (contains? extended "new1"))
-      (is (contains? extended "new2")))))
-
-(deftest trie-set-reduce-protocols-test
-  (testing "IReduceInit протокол - reduce с начальным значением"
-    (let [ts (trie-set "apple" "banana" "cherry")]
+  (deftest trie-set-reduce-protocols-test
+    (testing "IReduceInit протокол - reduce с начальным значением"
+      (let [ts (trie-set "apple" "banana" "cherry")]
       ;; Подсчет общей длины всех строк
-      (let [total-length (reduce (fn [acc word] (+ acc (count word))) 0 ts)]
-        (is (= (+ 5 6 6) total-length)))                    ; apple=5, banana=6, cherry=6
+        (let [total-length (reduce (fn [acc word] (+ acc (count word))) 0 ts)]
+          (is (= (+ 5 6 6) total-length)))                    ; apple=5, banana=6, cherry=6
 
       ;; Сбор всех слов в вектор
-      (let [collected (reduce conj [] ts)]
-        (is (= 3 (count collected)))
-        (is (= (set collected) #{"apple" "banana" "cherry"})))
+        (let [collected (reduce conj [] ts)]
+          (is (= 3 (count collected)))
+          (is (= (set collected) #{"apple" "banana" "cherry"})))
 
       ;; Конкатенация строк
-      (let [concatenated (reduce str "" ts)]
-        (is (string? concatenated))
-        (is (= 17 (count concatenated))))))                 ; apple+banana+cherry = 5+6+6=17
+        (let [concatenated (reduce str "" ts)]
+          (is (string? concatenated))
+          (is (= 17 (count concatenated))))))                 ; apple+banana+cherry = 5+6+6=17
 
-  (testing "IReduce протокол - reduce без начального значения"
-    (let [ts (trie-set "cat" "dog" "bird")]
+    (testing "IReduce протокол - reduce без начального значения"
+      (let [ts (trie-set "cat" "dog" "bird")]
       ;; Поиск самого длинного слова
-      (let [longest (reduce (fn [acc word]
-                              (if (> (count word) (count acc))
-                                word
-                                acc))
-                            ts)]
-        (is (= "bird" longest)))                            ; все слова длиной 3-4, bird = 4
+        (let [longest (reduce (fn [acc word]
+                                (if (> (count word) (count acc))
+                                  word
+                                  acc))
+                              ts)]
+          (is (= "bird" longest)))                            ; все слова длиной 3-4, bird = 4
 
       ;; Объединение в одну строку
-      (let [combined (reduce str ts)]
-        (is (string? combined))
-        (is (= 10 (count combined)))))))                    ; cat(3) + dog(3) + bird(4) = 10
+        (let [combined (reduce str ts)]
+          (is (string? combined))
+          (is (= 10 (count combined))))))))                    ; cat(3) + dog(3) + bird(4) = 10

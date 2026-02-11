@@ -1,7 +1,8 @@
 (ns lab2.combining-test
   (:require [clojure.test :refer [deftest is testing]]
-            [lab2.core :refer [to-trie-node trie-difference trie-intersection trie-set
-                               trie-set-union trie-set-union-all trie-to-seq]]))
+            [lab2.core :refer [trie-set trie-set-union trie-set-union-all
+                               trie-set-intersection trie-set-difference]]
+            [clojure.set :as set]))
 
 (deftest trie-set-sequence-test
   (testing "Множество с словами с общими префиксами"
@@ -100,105 +101,102 @@
 
 (deftest trie-intersection-comprehensive-test
   (testing "Базовые случаи пересечения"
-    (let [ts1 (to-trie-node (trie-set "cat" "car" "card"))
-          ts2 (to-trie-node (trie-set "cat" "dog" "card"))
-          result (trie-intersection ts1 ts2)]
-      (is (= 2 (:node-count result)))
-      (is (= #{"cat" "card"} (set (trie-to-seq result))))))
+    (let [ts1 (trie-set "cat" "car" "card")
+          ts2 (trie-set "cat" "dog" "card")
+          result (trie-set-intersection ts1 ts2)]
+      (is (= 2 (count result)))
+      (is (= #{"cat" "card"} (set (seq result))))))
 
   (testing "Пересечение с пустым множеством"
-    (let [ts (to-trie-node (trie-set "cat" "dog"))
-          empty (to-trie-node (trie-set))
-          result1 (trie-intersection ts empty)
-          result2 (trie-intersection empty ts)]
-      (is (= 0 (:node-count result1)))
-      (is (= 0 (:node-count result2)))
-      (is (empty? (trie-to-seq result1)))
-      (is (empty? (trie-to-seq result2)))))
+    (let [ts (trie-set "cat" "dog")
+          empty (trie-set)
+          result1 (set/intersection ts empty)
+          result2 (set/intersection empty ts)]
+      (is (= 0 (count result1)))
+      (is (= 0 (count result2)))
+      (is (empty? (seq result1)))
+      (is (empty? (seq result2)))))
 
   (testing "Пересечение непересекающихся множеств"
-    (let [ts1 (to-trie-node (trie-set "cat" "car"))
-          ts2 (to-trie-node (trie-set "dog" "bird"))
-          result (trie-intersection ts1 ts2)]
-      (is (= 0 (:node-count result)))
-      (is (empty? (trie-to-seq result)))))
+    (let [ts1 (trie-set "cat" "car")
+          ts2 (trie-set "dog" "bird")
+          result (trie-set-intersection ts1 ts2)]
+      (is (= 0 (count result)))
+      (is (empty? (seq result)))))
 
   (testing "Пересечение идентичных множеств"
-    (let [ts (to-trie-node (trie-set "cat" "car" "card"))
-          result (trie-intersection ts ts)]
-      (is (= 3 (:node-count result)))
-      (is (= #{"cat" "car" "card"} (set (trie-to-seq result))))))
+    (let [ts (trie-set "cat" "car" "card")
+          result (set/intersection ts ts)]
+      (is (= 3 (count result)))
+      (is (= #{"cat" "car" "card"} (set (seq result))))))
 
   (testing "Пересечение с общими префиксами"
-    (let [ts1 (to-trie-node (trie-set "cat" "car" "card" "care"))
-          ts2 (to-trie-node (trie-set "ca" "car" "care" "call"))
-          result (trie-intersection ts1 ts2)]
-      (is (= 2 (:node-count result)))
-      (is (= #{"car" "care"} (set (trie-to-seq result))))))
+    (let [ts1 (trie-set "cat" "car" "card" "care")
+          ts2 (trie-set "ca" "car" "care" "call")
+          result (trie-set-intersection ts1 ts2)]
+      (is (= 2 (count result)))
+      (is (= #{"car" "care"} (set (seq result))))))
 
   (testing "Пересечение подмножеств"
-    (let [ts1 (to-trie-node (trie-set "cat" "car"))
-          ts2 (to-trie-node (trie-set "cat" "car" "card" "care"))
-          result (trie-intersection ts1 ts2)]
-      (is (= 2 (:node-count result)))
-      (is (= #{"cat" "car"} (set (trie-to-seq result))))))
+    (let [ts1 (trie-set "cat" "car")
+          ts2 (trie-set "cat" "car" "card" "care")
+          result (trie-set-intersection ts1 ts2)]
+      (is (= 2 (count result)))
+      (is (= #{"cat" "car"} (set (seq result))))))
 
-  (testing "Оптимизация счетчиков при пересечении"
-    (let [ts1 (to-trie-node (trie-set "a" "ab" "abc"))
-          ts2 (to-trie-node (trie-set "a" "ax" "axy"))
-          result (trie-intersection ts1 ts2)]
-      ;; Должен содержать только "a"
-      (is (= 1 (:node-count result)))
-      (is (= #{"a"} (set (trie-to-seq result))))
-      ;; Проверим правильность счетчиков внутренних узлов
-      (is (= 1 (:node-count result)))
-      (is (= 1 (:node-count (get (:children result) \a)))))))
+  (testing "Пересечение множеств с одним общим элементом"
+    (let [ts1 (trie-set "a" "ab" "abc")
+          ts2 (trie-set "a" "ax" "axy")
+          result (trie-set-intersection ts1 ts2)]
+      (is (= 1 (count result)))
+      (is (= #{"a"} (set (seq result))))
+      (is (contains? result "a"))
+      (is (not (contains? result "ab")))
+      (is (not (contains? result "ax"))))))
 
 (deftest trie-difference-comprehensive-test
   (testing "Базовые случаи разности"
-    (let [ts1 (to-trie-node (trie-set "cat" "car" "card"))
-          ts2 (to-trie-node (trie-set "cat" "dog"))
-          result (trie-difference ts1 ts2)]
-      (is (= 2 (:node-count result)))
-      (is (= #{"car" "card"} (set (trie-to-seq result))))))
+    (let [ts1 (trie-set "cat" "car" "card")
+          ts2 (trie-set "cat" "dog")
+          result (trie-set-difference ts1 ts2)]
+      (is (= 2 (count result)))
+      (is (= #{"car" "card"} (set (seq result))))))
 
   (testing "Разность с пустым множеством"
-    (let [ts (to-trie-node (trie-set "cat" "dog"))
-          empty (to-trie-node (trie-set))
-          result1 (trie-difference ts empty)
-          result2 (trie-difference empty ts)]
+    (let [ts (trie-set "cat" "dog")
+          empty (trie-set)
+          result1 (trie-set-difference ts empty)
+          result2 (trie-set-difference empty ts)]
       ;; ts - empty = ts
-      (is (= 2 (:node-count result1)))
-      (is (= #{"cat" "dog"} (set (trie-to-seq result1))))
+      (is (= 2 (count result1)))
+      (is (= #{"cat" "dog"} (set (seq result1))))
       ;; empty - ts = empty
-      (is (= 0 (:node-count result2)))
-      (is (empty? (trie-to-seq result2)))))
+      (is (= 0 (count result2)))
+      (is (empty? (seq result2)))))
 
   (testing "Разность непересекающихся множеств"
-    (let [ts1 (to-trie-node (trie-set "cat" "car"))
-          ts2 (to-trie-node (trie-set "dog" "bird"))
-          result (trie-difference ts1 ts2)]
-      ;; Должно остаться все из ts1
-      (is (= 2 (:node-count result)))
-      (is (= #{"cat" "car"} (set (trie-to-seq result))))))
+    (let [ts1 (trie-set "cat" "car")
+          ts2 (trie-set "dog" "bird")
+          result (trie-set-difference ts1 ts2)]
+      (is (= 2 (count result)))
+      (is (= #{"cat" "car"} (set (seq result))))))
 
   (testing "Разность идентичных множеств"
-    (let [ts (to-trie-node (trie-set "cat" "car" "card"))
-          result (trie-difference ts ts)]
-      (is (= 0 (:node-count result)))
-      (is (empty? (trie-to-seq result)))))
+    (let [ts (trie-set "cat" "car" "card")
+          result (trie-set-difference ts ts)]
+      (is (= 0 (count result)))
+      (is (empty? (seq result)))))
 
   (testing "Разность с общими префиксами"
-    (let [ts1 (to-trie-node (trie-set "cat" "car" "card" "care"))
-          ts2 (to-trie-node (trie-set "ca" "car" "call"))
-          result (trie-difference ts1 ts2)]
-      ;; Должно остаться: "cat", "card", "care"
-      (is (= 3 (:node-count result)))
-      (is (= #{"cat" "card" "care"} (set (trie-to-seq result))))))
+    (let [ts1 (trie-set "cat" "car" "card" "care")
+          ts2 (trie-set "ca" "car" "call")
+          result (trie-set-difference ts1 ts2)]
+      (is (= 3 (count result)))
+      (is (= #{"cat" "card" "care"} (set (seq result))))))
 
   (testing "Разность подмножества из надмножества"
-    (let [ts1 (to-trie-node (trie-set "cat" "car" "card" "care"))
-          ts2 (to-trie-node (trie-set "cat" "car"))
-          result (trie-difference ts1 ts2)]
-      (is (= 2 (:node-count result)))
-      (is (= #{"card" "care"} (set (trie-to-seq result)))))))
+    (let [ts1 (trie-set "cat" "car" "card" "care")
+          ts2 (trie-set "cat" "car")
+          result (trie-set-difference ts1 ts2)]
+      (is (= 2 (count result)))
+      (is (= #{"card" "care"} (set (seq result)))))))

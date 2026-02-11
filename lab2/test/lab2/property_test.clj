@@ -1,7 +1,5 @@
 (ns lab2.property-test
-  (:require [clojure.test :refer :all]
-            [clojure.test.check :as tc]
-            [clojure.test.check.generators :as gen]
+  (:require [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [clojure.test.check.clojure-test :refer [defspec]]
             [lab2.core :as core]))
@@ -95,4 +93,3 @@
                 (let [seq-count (count (seq trie-set))
                       trie-count (count trie-set)]
                   (= seq-count trie-count))))
-

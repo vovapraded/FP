@@ -25,6 +25,14 @@
   "Объединяет несколько TrieSet"
   trie-set/union-all)
 
+(def trie-set-intersection
+  "Эффективное пересечение двух TrieSet - использует структуру Trie для оптимизации"
+  trie-set/intersection)
+
+(def trie-set-difference
+  "Эффективная разность двух TrieSet (первое минус второе) - использует структуру Trie"
+  trie-set/difference)
+
 ;; Функциональные операции, возвращающие TrieSet
 (def filter-set
   "Фильтрует TrieSet по предикату и возвращает новый TrieSet"

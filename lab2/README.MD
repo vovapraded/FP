@@ -72,7 +72,7 @@
 - `empty?` - Проверка пустоты TrieSet (стандартная функция Clojure)
 - `seq` - Преобразование TrieSet в последовательность (метод протокола `Seqable`)
 
-### Дополнительные операции сравнения TrieSet
+### Операции сравнения TrieSet
 - `clojure.set/intersection` - Пересечение множеств (стандартная функция Clojure)
 - `clojure.set/difference` - Разность множеств (стандартная функция Clojure)
 - `clojure.set/union` - Объединение множеств (стандартная функция Clojure)
