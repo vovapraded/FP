@@ -96,25 +96,3 @@
                       trie-count (count trie-set)]
                   (= seq-count trie-count))))
 
-;; Простые функциональные unit-тесты для проверки корректности property-based тестов
-(deftest property-test-validation
-  (testing "Валидация свойств на простых примерах"
-    (let [a (core/trie-set "cat" "dog")
-          b (core/trie-set "bird" "fish")
-          c (core/trie-set "tree")
-          empty-set (core/trie-set)]
-
-      ;; Ассоциативность
-      (is (.equiv (core/trie-set-union (core/trie-set-union a b) c)
-                  (core/trie-set-union a (core/trie-set-union b c))))
-
-      ;; Нейтральный элемент
-      (is (.equiv (core/trie-set-union empty-set a) a))
-      (is (.equiv (core/trie-set-union a empty-set) a))
-
-      ;; Идемпотентность
-      (is (.equiv (core/trie-set-union a a) a))
-
-      ;; Коммутативность
-      (is (.equiv (core/trie-set-union a b)
-                  (core/trie-set-union b a))))))
