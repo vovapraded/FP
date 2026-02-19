@@ -33,12 +33,12 @@ jobs:
           
     - name: Install dependencies
       run: |
-        cd lab2
+        cd lab3
         lein deps
       
     - name: Compile Java files
       run: |
-        cd lab2
+        cd lab3
         if find . -name "*.java" -type f | grep -q .; then
           lein javac
         else
@@ -53,7 +53,7 @@ jobs:
         
     - name: Run Clojure linters
       run: |
-        cd lab2
+        cd lab3
         clj-kondo --lint src test --config .clj-kondo/config.edn
         
         # Запуск дополнительных линтеров через алиасы
@@ -61,18 +61,18 @@ jobs:
         
     - name: Check dependencies
       run: |
-        cd lab2
+        cd lab3
         lein check-deps || true
       
     - name: Run tests
       run: |
-        cd lab2
+        cd lab3
         lein test
       
     - name: Generate detailed test report
       if: always()
       run: |
-        cd lab2
+        cd lab3
         echo "=== Test Summary ===" > test-results.txt
         lein test 2>&1 | tee -a test-results.txt
         echo "" >> test-results.txt
@@ -84,4 +84,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-results-clojure
-        path: lab2/test-results.txt
+        path: lab3/test-results.txt
