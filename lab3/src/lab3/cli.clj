@@ -2,7 +2,7 @@
   (:require [clojure.tools.cli :refer [parse-opts]]
             [clojure.string :as str]))
 
-; Data definitions
+;; Data definitions
 (def algorithms
   [{:key :linear
     :short "-l"

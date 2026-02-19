@@ -1,29 +1,38 @@
 (ns lab3.io
   (:require [clojure.string :as str])
-  (:import [java.io BufferedReader]))
+  (:import (java.io BufferedReader)))
 
 (defn create-input-stream []
   (line-seq (BufferedReader. *in*)))
 
 (defn parse-line
-  "Returns nil if line is invalid"
-  [delimiter line]
-  (try
-    (let [trimmed (str/trim line)]
-      (when-not (or (empty? trimmed)
-                    (str/starts-with? trimmed "#"))
-        (let [parts (str/split trimmed (re-pattern delimiter))]
-          (when (= 2 (count parts))
-            {:x (-> parts first str/trim Double/parseDouble)
-             :y (-> parts second str/trim Double/parseDouble)}))))
-    (catch Exception e
-      (binding [*out* *err*]
-        (println "Warning: failed to parse line:" line)
-        (println "Error:" (.getMessage e)))
-      nil)))
+  "Парсит строку в точку {:x :y}. Возвращает nil если строка невалидна.
+   delimiter-regex — скомпилированный regex (re-pattern)"
+  [delimiter-regex line]
+  (when-not (str/blank? line)
+    (try
+      (let [trimmed (str/trim line)
+            [x-str y-str :as parts] (str/split trimmed delimiter-regex)]
+        (when (= 2 (count parts))
+          {:x (Double/parseDouble (str/trim x-str))
+           :y (Double/parseDouble (str/trim y-str))}))
+      (catch NumberFormatException _ nil))))
 
-(defn parse-points [delimiter lines]
-  (->> lines (keep (partial parse-line delimiter))))
+(defn parse-points
+  "Парсит строки в точки, логирует невалидные строки с номерами"
+  [delimiter lines]
+  (let [regex (re-pattern delimiter)]
+    (->> lines
+         (map-indexed vector)
+         (keep (fn [[idx line]]
+                 (cond
+                   (str/blank? line) nil
+                   :else (if-let [point (parse-line regex line)]
+                           point
+                           (do
+                             (binding [*out* *err*]
+                               (println "Warning: invalid line" (inc idx) ":" line))
+                             nil))))))))
 
 (defn validate-sorted
   "Throws exception on first unsorted or duplicate pair"
@@ -38,7 +47,7 @@
                            (throw (ex-info "Input points must be sorted by x coordinate"
                                            {:previous prev-x :current curr-x})))
                          curr-x))]
-        ;; Use reductions to maintain state, but only realize as consumed
+    ;; Use reductions to maintain state, but only realize as consumed
     (map second
          (rest (reductions (fn [[prev-x _] point]
                              [(check-sorted prev-x point) point])
@@ -57,11 +66,3 @@
 
 (defn print-results! [results]
   (run! print-result! results))
-
-(defn spy
-  ([value]
-   (println value)
-   value)
-  ([label value]
-   (println (str label ": " (pr-str value)))
-   value))

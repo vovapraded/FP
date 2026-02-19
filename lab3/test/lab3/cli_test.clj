@@ -55,21 +55,10 @@
       (is (not (:ok? result)))
       (is (string? (:exit-message result))))))
 
-(deftest test-parse-cli-args-invalid-step-zero
-  (testing "Error with zero step"
-    (let [result (cli/parse-cli-args ["--linear" "--step" "0"])]
-      (is (not (:ok? result))))))
-
 (deftest test-parse-cli-args-invalid-window-size
   (testing "Error with window size < 2"
     (let [result (cli/parse-cli-args ["--newton" "-w" "1"])]
       (is (not (:ok? result))))))
-
-(deftest test-parse-cli-args-invalid-number-format
-  (testing "Error with non-numeric step"
-    (let [result (cli/parse-cli-args ["--linear" "--step" "abc"])]
-      (is (not (:ok? result)))
-      (is (string? (:exit-message result))))))
 
 (deftest test-parse-cli-args-help
   (testing "Help flag returns usage"

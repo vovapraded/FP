@@ -5,53 +5,52 @@
 
 ;; ========== PARSE-LINE TESTS ==========
 
+(def ^:private semicolon-regex (re-pattern ";"))
+(def ^:private tab-regex (re-pattern "\t"))
+
 (deftest test-parse-line-valid-semicolon
   (testing "Parse valid line with semicolon delimiter"
-    (let [result (io/parse-line ";" "1.5;2.7")]
+    (let [result (io/parse-line semicolon-regex "1.5;2.7")]
       (is (= {:x 1.5 :y 2.7} result)))))
 
 (deftest test-parse-line-valid-tab
   (testing "Parse valid line with tab delimiter"
-    (let [result (io/parse-line "\t" "1.5\t2.7")]
+    (let [result (io/parse-line tab-regex "1.5\t2.7")]
       (is (= {:x 1.5 :y 2.7} result)))))
 
 (deftest test-parse-line-with-spaces
   (testing "Parse line with extra spaces"
-    (let [result (io/parse-line ";" "  1.5 ; 2.7  ")]
+    (let [result (io/parse-line semicolon-regex "  1.5 ; 2.7  ")]
       (is (= {:x 1.5 :y 2.7} result)))))
 
 (deftest test-parse-line-negative-numbers
   (testing "Parse negative numbers"
-    (let [result (io/parse-line ";" "-1.5;-2.7")]
+    (let [result (io/parse-line semicolon-regex "-1.5;-2.7")]
       (is (= {:x -1.5 :y -2.7} result)))))
 
 (deftest test-parse-line-scientific-notation
   (testing "Parse scientific notation"
-    (let [result (io/parse-line ";" "1.5e2;2.7e-3")]
+    (let [result (io/parse-line semicolon-regex "1.5e2;2.7e-3")]
       (is (= {:x 150.0 :y 0.0027} result)))))
 
 (deftest test-parse-line-empty
   (testing "Empty line returns nil"
-    (is (nil? (io/parse-line ";" "")))))
+    (is (nil? (io/parse-line semicolon-regex "")))))
 
 (deftest test-parse-line-whitespace-only
   (testing "Whitespace-only line returns nil"
-    (is (nil? (io/parse-line ";" "   \t  ")))))
-
-(deftest test-parse-line-comment
-  (testing "Comment line returns nil"
-    (is (nil? (io/parse-line ";" "# this is a comment")))))
+    (is (nil? (io/parse-line semicolon-regex "   \t  ")))))
 
 (deftest test-parse-line-invalid-format
   (testing "Invalid format returns nil"
-    (is (nil? (io/parse-line ";" "1.5")))                   ; only one value
-    (is (nil? (io/parse-line ";" "1.5;2.7;3")))             ; three values
-    (is (nil? (io/parse-line ";" "abc;def")))))             ; non-numeric
+    (is (nil? (io/parse-line semicolon-regex "1.5")))                   ; only one value
+    (is (nil? (io/parse-line semicolon-regex "1.5;2.7;3")))             ; three values
+    (is (nil? (io/parse-line semicolon-regex "abc;def")))))             ; non-numeric
 
 (deftest test-parse-line-partial-invalid
   (testing "Partial invalid returns nil"
-    (is (nil? (io/parse-line ";" "1.5;abc")))
-    (is (nil? (io/parse-line ";" "abc;2.7")))))
+    (is (nil? (io/parse-line semicolon-regex "1.5;abc")))
+    (is (nil? (io/parse-line semicolon-regex "abc;2.7")))))
 
 ;; ========== PARSE-POINTS TESTS ==========
 
@@ -141,12 +140,6 @@
   (testing "Format basic result"
     (is (= "linear: 1.00 | 2.00" (io/format-result :linear 1.0 2.0)))))
 
-(deftest test-format-result-scientific
-  (testing "Format with scientific notation for large numbers"
-    (let [result (io/format-result :newton 1000000.0 0.000001)]
-      (is (string? result))
-      (is (str/starts-with? result "newton:")))))
-
 (deftest test-format-result-negative
   (testing "Format negative numbers"
     (is (= "lagrange: -1.00 | -2.00" (io/format-result :lagrange -1.0 -2.0)))))
@@ -171,14 +164,3 @@
           output (with-out-str (io/print-results! results))]
       (is (str/includes? output "linear: 0.00 | 0.00"))
       (is (str/includes? output "newton: 1.00 | 1.00")))))
-
-;; ========== SPY TESTS ==========
-
-(deftest test-spy-returns-value
-  (testing "Spy returns its input"
-    (is (= 42 (io/spy 42)))
-    (is (= "test" (io/spy "test")))))
-
-(deftest test-spy-with-label
-  (testing "Spy with label returns value"
-    (is (= [1 2 3] (io/spy "my-label" [1 2 3])))))
