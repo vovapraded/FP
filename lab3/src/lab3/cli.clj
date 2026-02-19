@@ -18,20 +18,22 @@
       :desc "Use Lagrange polynomial interpolation"}])
 
 (def cli-options
-    (concat
-        (map (juxt :short :long :desc) algorithms)
+    (into []
+          (concat
+              (for [{:keys [short long desc]} algorithms]
+                  [short long desc])
 
-        [["-s" "--step STEP" "Step for output discretization"
-          :default 1.0
-          :parse-fn #(Double/parseDouble %)
-          :validate [#(> % 0) "Step must be positive"]]
-         ["-w" "--window-size SIZE" "Window size for polynomial interpolation"
-          :default 4
-          :parse-fn #(Integer/parseInt %)
-          :validate [#(>= % 2) "Window size must be at least 2"]]
-         ["-d" "--delimiter DELIM" "CSV delimiter (default: semicolon)"
-          :default ";"]
-         ["-h" "--help" "Show help"]]))
+              [["-s" "--step STEP" "Step for output discretization"
+                :default 1.0
+                :parse-fn parse-double
+                :validate [pos? "Step must be positive"]]
+               ["-w" "--window-size SIZE" "Window size for polynomial interpolation"
+                :default 4
+                :parse-fn parse-long
+                :validate [#(>= % 2) "Window size must be at least 2"]]
+               ["-d" "--delimiter DELIM" "CSV delimiter (default: semicolon)"
+                :default ";"]
+               ["-h" "--help" "Show help"]])))
 
 ; API
 (defn- validate-options
@@ -54,19 +56,18 @@
           "  cat data.csv | program --linear --step 0.5"
           "  program -n --newton -w 5 --step 0.1 < input.txt"
           ""]
-         (str/join \newline)))
+         (str/join "\n")))
 
 (defn- error-msg
     "Format error messages"
     [errors]
     (str "The following errors occurred while parsing command:\n\n"
-         (str/join \newline errors)))
+         (str/join "\n" errors)))
 
 (defn parse-cli-args
     "Parse command line arguments and return options map or error"
     [args]
-    (let [parsed (parse-opts args cli-options)
-          {:keys [options errors summary]} parsed
+    (let [{:keys [options errors summary]} (parse-opts args cli-options)
           validation-error (validate-options options)]
         (cond
             (:help options)    {:exit-message (usage summary) :ok? true}
@@ -77,6 +78,4 @@
 (defn get-selected-algorithms
     "Return vector of selected algorithm keywords"
     [options]
-    (filterv options (map :key algorithms)))
-
-
+    (filter options (map :key algorithms)))
