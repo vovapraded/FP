@@ -37,11 +37,14 @@
          (filter some?)))
 
 (defn validate-sorted
-    "Check that points are sorted by x coordinate
-     Returns lazy seq, throws exception on first unsorted pair"
+    "Check that points are sorted by x coordinate and have unique x values
+     Returns lazy seq, throws exception on first unsorted or duplicate pair"
     [points]
     (let [check-sorted (fn [prev-x point]
                            (let [curr-x (:x point)]
+                               (when (and prev-x (== curr-x prev-x))
+                                   (throw (ex-info "Duplicate x coordinate found (interpolation requires unique x values)"
+                                                   {:previous prev-x :current curr-x})))
                                (when (and prev-x (< curr-x prev-x))
                                    (throw (ex-info "Input points must be sorted by x coordinate"
                                                    {:previous prev-x :current curr-x})))
@@ -55,15 +58,19 @@
 
 ;; ========== OUTPUT ==========
 
-(defn- format-number [n]
-    (if (== n (long n))
-        (str (long n))
-        (format "%.6f" n)))
+(defn- format-number
+  "Format number: show 2 decimal places, remove trailing zeros"
+  [n]
+  (if (== n (long n))
+    (format "%.1f" (double n))  ; целые числа как 1.0, 2.0
+    (let [formatted (format "%.2f" n)]
+      ;; убираем лишние нули после запятой, но оставляем минимум один знак
+      (str/replace formatted #"(\.\d*?)0+$" "$1"))))
 
 (defn format-result
     "Format interpolation result for output"
     [algorithm x y]
-    (format "%s: %s %s" (name algorithm) (format-number x) (format-number y)))
+    (format "%s: %.2f | %.2f" (name algorithm) (double x) (double y)))
 
 (defn print-result!
     "Print single result and flush output immediately"

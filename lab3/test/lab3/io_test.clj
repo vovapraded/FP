@@ -100,10 +100,11 @@
             (is (= points (vec result))))))
 
 (deftest test-validate-sorted-equal-x
-    (testing "Equal x values are allowed (non-strict sorting)"
-        (let [points [{:x 0 :y 0} {:x 1 :y 1} {:x 1 :y 2}]
-              result (io/validate-sorted points)]
-            (is (= points (vec result))))))
+    (testing "Equal x values throw exception (interpolation requires unique x)"
+        (let [points [{:x 0 :y 0} {:x 1 :y 1} {:x 1 :y 2}]]
+            (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                                  #"Duplicate x coordinate"
+                                  (vec (io/validate-sorted points)))))))
 
 (deftest test-validate-sorted-invalid
     (testing "Unsorted sequence throws exception"
