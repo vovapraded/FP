@@ -2,16 +2,11 @@
   (:require [clojure.string :as str])
   (:import [java.io BufferedReader]))
 
-;; ========== INPUT ==========
-
-(defn create-input-stream
-  "Create lazy sequence of lines from stdin"
-  []
+(defn create-input-stream []
   (line-seq (BufferedReader. *in*)))
 
 (defn parse-line
-  "Parse CSV line into point map {:x ... :y ...}
-     Returns nil if line is invalid"
+  "Returns nil if line is invalid"
   [delimiter line]
   (try
     (let [trimmed (str/trim line)]
@@ -28,17 +23,13 @@
         (println "Error:" (.getMessage e)))
       nil)))
 
-(defn parse-points
-  "Convert lazy sequence of lines to lazy sequence of points
-     Filters out nil values from failed parses"
-  [delimiter lines]
+(defn parse-points [delimiter lines]
   (->> lines
        (map (partial parse-line delimiter))
        (filter some?)))
 
 (defn validate-sorted
-  "Check that points are sorted by x coordinate and have unique x values
-     Returns lazy seq, throws exception on first unsorted or duplicate pair"
+  "Throws exception on first unsorted or duplicate pair"
   [points]
   (let [check-sorted (fn [prev-x point]
                        (let [curr-x (:x point)]
@@ -57,32 +48,21 @@
                            [nil nil]
                            points)))))
 
-;; ========== OUTPUT ==========
-
-(defn format-result
-  "Format interpolation result for output"
-  [algorithm x y]
+(defn format-result [algorithm x y]
   (format "%s: %.2f | %.2f" (name algorithm) (double x) (double y)))
 
 (defn print-result!
-  "Print single result and flush output immediately"
   ([algorithm x y]
    (println (format-result algorithm x y))
    (flush))
   ([{:keys [algorithm x y]}]
    (print-result! algorithm x y)))
 
-(defn print-results!
-  "Print sequence of results
-     Each result is a map {:algorithm :x :y}"
-  [results]
+(defn print-results! [results]
   (doseq [result results]
     (print-result! result)))
 
-;; ========== DEBUG ==========
 (defn spy
-  "Debug helper - prints value and returns it
-     Can be used with or without label"
   ([value]
    (println value)
    value)

@@ -1,58 +1,36 @@
 (ns lab3.stream
   (:require [lab3.interpolation :as interp]))
 
-;; ========== ГЕНЕРАЦИЯ X-КООРДИНАТ ==========
-
 (defn generate-x-values
-  "Генерирует последовательность X-координат с заданным шагом
-   от start до end (включительно, если делится нацело).
-   Использует floor для подсчёта шагов — никогда не выйдет за end."
+  "Никогда не выйдет за end"
   [start end step]
   (let [n (long (Math/floor (/ (- end start) step)))]
     (map #(+ start (* % step)) (range (inc n)))))
 
-;; ========== УПРАВЛЕНИЕ ОКНОМ ДАННЫХ ==========
-
-(defn create-window
-  "Создать новое окно данных"
-  [size]
+(defn create-window [size]
   {:size size
    :points []})
 
-(defn window-full?
-  "Проверить, заполнено ли окно"
-  [{:keys [size points]}]
+(defn window-full? [{:keys [size points]}]
   (>= (count points) size))
 
 (defn add-to-window
-  "Добавить точку в окно (sliding window)
-   Если окно заполнено, удаляется первая точка"
+  "Sliding window: если заполнено, удаляется первая точка"
   [{:keys [size points] :as window} point]
   (let [new-points (if (>= (count points) size)
                      (conj (vec (rest points)) point)
                      (conj points point))]
     (assoc window :points new-points)))
 
-(defn get-window-points
-  "Получить точки из окна"
-  [{:keys [points]}]
+(defn get-window-points [{:keys [points]}]
   points)
 
-(defn window-x-range
-  "Получить диапазон X-координат окна [min-x max-x]"
-  [{:keys [points]}]
+(defn window-x-range [{:keys [points]}]
   (when (seq points)
     [(:x (first points)) (:x (last points))]))
 
-;; ========== ПОТОКОВАЯ ОБРАБОТКА ==========
-
 (defn interpolate-segment
-  "Интерполировать сегмент между точками окна
-   algorithm-key - ключ алгоритма
-   points - точки для интерполяции
-   start-x, end-x - диапазон X
-   step - шаг дискретизации
-   Возвращает последовательность {:algorithm :x :y}"
+  "Возвращает seq {:algorithm :x :y}"
   [algorithm-key points start-x end-x step]
   (let [x-values (generate-x-values start-x end-x step)]
     (map (fn [x]
@@ -62,13 +40,7 @@
          x-values)))
 
 (defn- process-window-segment
-  "Обработать сегмент окна и определить диапазон для интерполяции.
-   Возвращает карту {:start-x :end-x :points}.
-   Аргументы:
-     prev-end-x - предыдущая конечная X (или nil для первого окна)
-     window - текущее окно данных
-     step - шаг дискретизации
-     is-last - флаг, является ли это последним окном"
+  "Возвращает {:start-x :end-x :points}"
   [prev-end-x window step is-last]
   (let [[min-x max-x] (window-x-range window)
         points (get-window-points window)
@@ -94,16 +66,7 @@
       (let [mid-x (/ (+ min-x max-x) 2)]
         {:start-x (+ prev-end-x step) :end-x mid-x :points points}))))
 
-(defn process-stream
-  "Обработать поток точек с потоковой интерполяцией
-   algorithm-key - ключ алгоритма
-   window-size - размер окна
-   step - шаг дискретизации
-   points - ленивая последовательность точек
-   output-fn - функция вывода (принимает результат интерполяции)
-
-   Возвращает nil, выводит результаты через output-fn"
-  [algorithm-key window-size step points output-fn]
+(defn process-stream [algorithm-key window-size step points output-fn]
   (let [effective-window-size (max window-size interp/min-points)]
     (loop [remaining points
            window (create-window effective-window-size)
@@ -133,29 +96,18 @@
                 (doseq [r results]
                   (output-fn r))))))))))
 
-;; ========== ВЫСОКОУРОВНЕВЫЙ API ==========
-
-(defn create-stream-processor
-  "Создать обработчик потока для заданного алгоритма
-   Возвращает функцию (fn [points output-fn] ...)"
-  [algorithm-key window-size step]
+(defn create-stream-processor [algorithm-key window-size step]
   (fn [points output-fn]
     (process-stream algorithm-key window-size step points output-fn)))
 
-;; ========== ЧИСТО ФУНКЦИОНАЛЬНАЯ ОБРАБОТКА ПОТОКА ==========
-
-(defn initial-processor-state
-  "Создать начальное состояние процессора для алгоритма
-   Чистая функция - никакого мутабельного состояния"
-  [algorithm-key window-size]
+(defn initial-processor-state [algorithm-key window-size]
   (let [effective-window-size (max window-size interp/min-points)]
     {:algorithm algorithm-key
      :window (create-window effective-window-size)
      :prev-end-x nil}))
 
 (defn step-processor
-  "Обработать одну точку процессором (чистая функция)
-   Возвращает {:state новое-состояние :results seq-результатов}"
+  "Возвращает {:state :results}"
   [state point step]
   (let [{:keys [algorithm window prev-end-x]} state
         new-window (add-to-window window point)]
@@ -171,10 +123,7 @@
       {:state (assoc state :window new-window)
        :results nil})))
 
-(defn finalize-processor
-  "Финализировать процессор (чистая функция)
-   Возвращает финальные результаты"
-  [state step]
+(defn finalize-processor [state step]
   (let [{:keys [algorithm window prev-end-x]} state]
     (when (and window (>= (count (get-window-points window)) 2))
       (let [{:keys [start-x end-x points]}
@@ -183,17 +132,11 @@
         (when (and effective-start end-x (seq points) (<= effective-start end-x))
           (interpolate-segment algorithm points effective-start end-x step))))))
 
-(defn create-initial-states
-  "Создать начальные состояния для всех алгоритмов"
-  [algorithms window-size]
+(defn create-initial-states [algorithms window-size]
   (mapv #(initial-processor-state % window-size) algorithms))
 
 (defn process-point-all
-  "Обработать одну точку всеми процессорами
-   states - вектор состояний
-   point - точка
-   step - шаг
-   Возвращает {:states новые-состояния :all-results seq-всех-результатов}"
+  "Возвращает {:states :all-results}"
   [states point step]
   (reduce
    (fn [{:keys [states all-results]} state]
@@ -205,8 +148,5 @@
    {:states [] :all-results []}
    states))
 
-(defn finalize-all
-  "Финализировать все процессоры
-   Возвращает seq всех финальных результатов"
-  [states step]
+(defn finalize-all [states step]
   (mapcat #(finalize-processor % step) states))

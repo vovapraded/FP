@@ -36,15 +36,11 @@
      ["-h" "--help" "Show help"]])))
 
 ; API
-(defn- validate-options
-  "Validate that at least one algorithm is selected"
-  [options]
+(defn- validate-options [options]
   (when-not (some options (map :key algorithms))
     "At least one interpolation algorithm must be specified"))
 
-(defn- usage
-  "Generate usage/help message"
-  [options-summary]
+(defn- usage [options-summary]
   (str/join "\n"
             ["Interpolation program - Lab 3"
              ""
@@ -58,15 +54,11 @@
              "  program -n --newton -w 5 --step 0.1 < input.txt"
              ""]))
 
-(defn- error-msg
-  "Format error messages"
-  [errors]
+(defn- error-msg [errors]
   (str "The following errors occurred while parsing command:\n\n"
        (str/join "\n" errors)))
 
-(defn parse-cli-args
-  "Parse command line arguments and return options map or error"
-  [args]
+(defn parse-cli-args [args]
   (let [{:keys [options errors summary]} (parse-opts args cli-options)
         validation-error (validate-options options)]
     (cond
@@ -75,7 +67,5 @@
       validation-error   {:exit-message (str validation-error "\n\n" (usage summary)) :ok? false}
       :else              {:ok? true :options options})))
 
-(defn get-selected-algorithms
-  "Return vector of selected algorithm keywords"
-  [options]
+(defn get-selected-algorithms [options]
   (filter options (map :key algorithms)))

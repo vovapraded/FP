@@ -5,15 +5,7 @@
   (:gen-class))
 
 (defn run-interpolation
-  "Запустить интерполяцию для заданных параметров
-   params - карта с ключами:
-     :algorithms - список алгоритмов [:linear :newton ...]
-     :step - шаг дискретизации
-     :window-size - размер окна для полиномиальной интерполяции
-   points - ленивая последовательность точек
-
-   Обрабатывает точки лениво с использованием чистых функций.
-   Состояние передаётся явно через reduce."
+  "Обрабатывает точки лениво, состояние передаётся явно через reduce"
   [{:keys [algorithms step window-size]} points]
   (let [;; Начальные состояния процессоров (чистые данные)
         initial-states (stream/create-initial-states algorithms window-size)
@@ -36,11 +28,7 @@
     (doseq [r final-results]
       (io/print-result! r))))
 
-(defn -main
-  "Точка входа в программу.
-   Парсит аргументы командной строки, запускает интерполяцию
-   и обрабатывает ошибки с выводом сообщений в stderr."
-  [& args]
+(defn -main [& args]
   (let [{:keys [ok? exit-message options]} (cli/parse-cli-args args)]
     (if exit-message
       (do
