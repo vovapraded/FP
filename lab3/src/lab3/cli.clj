@@ -28,7 +28,7 @@
       :parse-fn parse-double
       :validate [pos? "Step must be positive"]]
      ["-w" "--window-size SIZE" "Window size for polynomial interpolation"
-      :default 4
+      :default 2
       :parse-fn parse-long
       :validate [#(>= % 2) "Window size must be at least 2"]]
      ["-d" "--delimiter DELIM" "CSV delimiter (default: semicolon)"

@@ -39,7 +39,7 @@
     (let [result (cli/parse-cli-args ["--linear"])]
       (is (:ok? result))
       (is (= 1.0 (get-in result [:options :step])))
-      (is (= 4 (get-in result [:options :window-size])))
+      (is (= 2 (get-in result [:options :window-size])))
       (is (= ";" (get-in result [:options :delimiter]))))))
 
 (deftest test-parse-cli-args-no-algorithm

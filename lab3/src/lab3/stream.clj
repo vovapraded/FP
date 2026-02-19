@@ -11,6 +11,11 @@
        range
        (map #(+ start (* % step)))))
 
+(defn last-x-value
+  "Возвращает последнее значение x, которое будет сгенерировано для данного сегмента"
+  [start end step]
+  (last (generate-x-values start end step)))
+
 (defn create-window [size]
   {:size size
    :points []})
@@ -53,7 +58,12 @@
      :y (interp/interpolate alg points x)}))
 
 (defn- process-window-segment
-  "Возвращает {:start-x :end-x :points}"
+  "Возвращает {:start-x :end-x :points}
+   
+   Логика: интерполируем от последней выведенной точки до максимума текущего окна.
+   Для первого окна начинаем с минимума.
+   Для не-последнего окна ограничиваем до предпоследней точки, чтобы следующее
+   окно могло продолжить интерполяцию с новыми данными."
   [prev-end-x window step is-last]
   (let [[min-x max-x] (window-x-range window)
         points (get-window-points window)
@@ -63,21 +73,22 @@
       (< point-count 2)
       {:start-x nil :end-x nil :points []}
 
-      ;; Первое окно - интерполируем до середины
+      ;; Первое окно
       (nil? prev-end-x)
-      (let [mid-x (if is-last
+      (let [end-x (if is-last
                     max-x
-                    (/ (+ min-x max-x) 2))]
-        {:start-x min-x :end-x mid-x :points points})
+                    ;; Для не-последнего окна останавливаемся на предпоследней точке
+                    (:x (nth points (- point-count 2))))]
+        {:start-x min-x :end-x end-x :points points})
 
-      ;; Последнее окно - интерполируем от предыдущей точки до конца
+      ;; Последнее окно - интерполируем до конца
       is-last
       {:start-x (+ prev-end-x step) :end-x max-x :points points}
 
-      ;; Промежуточное окно - интерполируем центральную область
+      ;; Промежуточное окно - интерполируем до предпоследней точки
       :else
-      (let [mid-x (/ (+ min-x max-x) 2)]
-        {:start-x (+ prev-end-x step) :end-x mid-x :points points}))))
+      (let [end-x (:x (nth points (- point-count 2)))]
+        {:start-x (+ prev-end-x step) :end-x end-x :points points}))))
 
 (defn process-stream [algorithm-key window-size step points output-fn]
   (let [effective-window-size (max window-size interp/min-points)]
@@ -89,12 +100,13 @@
               new-window (add-to-window window point)]
           (if (window-full? new-window)
             (let [{:keys [start-x end-x points]}
-                  (process-window-segment prev-end-x new-window step false)]
-              (when (and start-x end-x (seq points))
-                (let [results (interpolate-segment algorithm-key points start-x end-x step)]
-                  (doseq [r results]
-                    (output-fn r))))
-              (recur (rest remaining) new-window end-x))
+                  (process-window-segment prev-end-x new-window step false)
+                  results (when (and start-x end-x (seq points) (<= start-x end-x))
+                            (interpolate-segment algorithm-key points start-x end-x step))
+                  actual-last-x (when (seq results) (last-x-value start-x end-x step))]
+              (doseq [r results]
+                (output-fn r))
+              (recur (rest remaining) new-window (or actual-last-x prev-end-x)))
             (recur (rest remaining) new-window prev-end-x)))
         (when (>= (count (get-window-points window)) 2)
           (let [{:keys [start-x end-x points]}
@@ -119,10 +131,13 @@
   (let [new-window (add-to-window window point)]
     (if (window-full? new-window)
       (let [{:keys [start-x end-x points]}
-            (process-window-segment prev-end-x new-window step false)]
-        {:state (assoc state :window new-window :prev-end-x end-x)
-         :results (when (and start-x end-x (seq points))
-                    (interpolate-segment-all algorithms points start-x end-x step))})
+            (process-window-segment prev-end-x new-window step false)
+            results (when (and start-x end-x (seq points) (<= start-x end-x))
+                      (interpolate-segment-all algorithms points start-x end-x step))
+            ;; Сохраняем последнюю фактически выведенную x-координату
+            actual-last-x (when (seq results) (last-x-value start-x end-x step))]
+        {:state (assoc state :window new-window :prev-end-x (or actual-last-x prev-end-x))
+         :results results})
       {:state (assoc state :window new-window)
        :results nil})))
 

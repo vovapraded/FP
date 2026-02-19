@@ -5,10 +5,20 @@
   (:gen-class)
   (:import (clojure.lang ExceptionInfo)))
 
-(defn run-interpolation
-  "Обрабатывает точки потоково, возвращает последовательность результатов."
+(defn run-interpolation-streaming!
+  "Обрабатывает точки потоково с немедленным выводом результатов."
   [{:keys [algorithms step window-size]} points]
-  (stream/process-all-points algorithms window-size step points))
+  (let [state-atom (atom (stream/initial-state algorithms window-size))]
+    (doseq [point points]
+      (let [{:keys [state results]} (stream/step-processor @state-atom point step)]
+        (reset! state-atom state)
+        (when results
+          (doseq [r results]
+            (io/print-result! r)))))
+    ;; Финализация: вывод оставшихся точек
+    (when-let [final-results (stream/finalize-processor @state-atom step)]
+      (doseq [r final-results]
+        (io/print-result! r)))))
 
 (defn- format-error
   [prefix ^Exception e]
@@ -30,13 +40,14 @@
       (try
         (let [{:keys [step window-size delimiter]} options
               algorithms (cli/get-selected-algorithms options)
-              results (->> (io/create-input-stream)
-                           (io/parse-points delimiter)
-                           io/validate-sorted
-                           (run-interpolation {:algorithms algorithms
-                                               :step step
-                                               :window-size window-size}))]
-          {:exit-code 0 :results results})
+              points (->> (io/create-input-stream)
+                          (io/parse-points delimiter)
+                          io/validate-sorted)]
+          (run-interpolation-streaming! {:algorithms algorithms
+                                         :step step
+                                         :window-size window-size}
+                                        points)
+          {:exit-code 0})
         (catch ExceptionInfo e
           {:exit-code 1 :error (format-error "Error:" e)})
         (catch Exception e
@@ -45,9 +56,8 @@
 (defn -main
   "Точка входа: единственное место с побочными эффектами (печать, System/exit)"
   [& args]
-  (let [{:keys [exit-code output results error]} (run-app args)]
+  (let [{:keys [exit-code output error]} (run-app args)]
     (cond
       output (println output)
-      error (binding [*out* *err*] (println error))
-      results (io/print-results! results))
+      error (binding [*out* *err*] (println error)))
     (System/exit exit-code)))
