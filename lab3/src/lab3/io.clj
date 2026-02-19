@@ -58,15 +58,6 @@
 
 ;; ========== OUTPUT ==========
 
-(defn- format-number
-  "Format number: show 2 decimal places, remove trailing zeros"
-  [n]
-  (if (== n (long n))
-    (format "%.1f" (double n))  ; целые числа как 1.0, 2.0
-    (let [formatted (format "%.2f" n)]
-      ;; убираем лишние нули после запятой, но оставляем минимум один знак
-      (str/replace formatted #"(\.\d*?)0+$" "$1"))))
-
 (defn format-result
     "Format interpolation result for output"
     [algorithm x y]

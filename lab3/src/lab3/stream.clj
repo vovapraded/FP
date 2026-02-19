@@ -5,10 +5,11 @@
 
 (defn generate-x-values
   "Генерирует последовательность X-координат с заданным шагом
-   от start до end (включительно, с небольшой погрешностью)"
+   от start до end (включительно, если делится нацело).
+   Использует floor для подсчёта шагов — никогда не выйдет за end."
   [start end step]
-  (take-while #(<= % (+ end 0.0001))
-              (iterate #(+ % step) start)))
+  (let [n (long (Math/floor (/ (- end start) step)))]
+    (map #(+ start (* % step)) (range (inc n)))))
 
 ;; ========== УПРАВЛЕНИЕ ОКНОМ ДАННЫХ ==========
 
@@ -61,11 +62,13 @@
          x-values)))
 
 (defn- process-window-segment
-  "Обработать сегмент окна и определить диапазон для интерполяции
-   prev-end-x - предыдущая конечная X (или nil для первого окна)
-   window - текущее окно
-   step - шаг дискретизации
-   is-last - последнее ли это окно"
+  "Обработать сегмент окна и определить диапазон для интерполяции.
+   Возвращает карту {:start-x :end-x :points}.
+   Аргументы:
+     prev-end-x - предыдущая конечная X (или nil для первого окна)
+     window - текущее окно данных
+     step - шаг дискретизации
+     is-last - флаг, является ли это последним окном"
   [prev-end-x window step is-last]
   (let [[min-x max-x] (window-x-range window)
         points (get-window-points window)

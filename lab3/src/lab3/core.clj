@@ -37,7 +37,11 @@
     (doseq [r final-results]
       (io/print-result! r))))
 
-(defn -main [& args]
+(defn -main
+  "Точка входа в программу.
+   Парсит аргументы командной строки, запускает интерполяцию
+   и обрабатывает ошибки с выводом сообщений в stderr."
+  [& args]
   (let [{:keys [ok? exit-message options]} (cli/parse-cli-args args)]
     (if exit-message
       (do
