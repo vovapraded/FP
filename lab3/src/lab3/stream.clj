@@ -42,6 +42,16 @@
           :y (interp/interpolate algorithm-key points x)})
        (generate-x-values start-x end-x step)))
 
+(defn interpolate-segment-all
+  "Интерполирует сегмент для всех алгоритмов сразу.
+   Возвращает seq {:algorithm :x :y}"
+  [algorithms points start-x end-x step]
+  (for [x (generate-x-values start-x end-x step)
+        alg algorithms]
+    {:algorithm alg
+     :x x
+     :y (interp/interpolate alg points x)}))
+
 (defn- process-window-segment
   "Возвращает {:start-x :end-x :points}"
   [prev-end-x window step is-last]
@@ -95,70 +105,53 @@
                 (doseq [r results]
                   (output-fn r))))))))))
 
-(defn create-stream-processor [algorithm-key window-size step]
-  (fn [points output-fn]
-    (process-stream algorithm-key window-size step points output-fn)))
-
-(defn initial-processor-state [algorithm-key window-size]
+(defn initial-state
+  "Создаёт начальное состояние процессора с одним общим окном для всех алгоритмов"
+  [algorithms window-size]
   (let [effective-window-size (max window-size interp/min-points)]
-    {:algorithm algorithm-key
+    {:algorithms algorithms
      :window (create-window effective-window-size)
      :prev-end-x nil}))
 
 (defn step-processor
-  "Возвращает {:state :results}"
-  [{:keys [algorithm window prev-end-x] :as state} point step]
+  "Обрабатывает одну точку. Возвращает {:state :results}"
+  [{:keys [algorithms window prev-end-x] :as state} point step]
   (let [new-window (add-to-window window point)]
     (if (window-full? new-window)
       (let [{:keys [start-x end-x points]}
             (process-window-segment prev-end-x new-window step false)]
         {:state (assoc state :window new-window :prev-end-x end-x)
          :results (when (and start-x end-x (seq points))
-                    (interpolate-segment algorithm points start-x end-x step))})
+                    (interpolate-segment-all algorithms points start-x end-x step))})
       {:state (assoc state :window new-window)
        :results nil})))
 
-(defn finalize-processor [{:keys [algorithm window prev-end-x]} step]
+(defn finalize-processor
+  "Финализирует обработку, интерполируя оставшиеся точки"
+  [{:keys [algorithms window prev-end-x]} step]
   (when (and window (>= (count (get-window-points window)) 2))
     (let [{:keys [start-x end-x points]}
           (process-window-segment prev-end-x window step true)
           effective-start (or (some-> prev-end-x (+ step)) start-x)]
       (when (and effective-start end-x (seq points) (<= effective-start end-x))
-        (interpolate-segment algorithm points effective-start end-x step)))))
-
-(defn create-initial-states [algorithms window-size]
-  (mapv #(initial-processor-state % window-size) algorithms))
-
-(defn process-point-all
-  "Возвращает {:states :all-results}"
-  [states point step]
-  (reduce
-   (fn [{:keys [states all-results]} state]
-     (let [{:keys [state results]} (step-processor state point step)]
-       {:states (conj states state)
-        :all-results (if results
-                       (concat all-results results)
-                       all-results)}))
-   {:states [] :all-results []}
-   states))
-
-(defn finalize-all [states step]
-  (mapcat #(finalize-processor % step) states))
+        (interpolate-segment-all algorithms points effective-start end-x step)))))
 
 (defn- process-point-reducer
-  "Чистая функция-редюсер: аккумулирует состояния и результаты"
-  [step {:keys [states accumulated-results]} point]
-  (let [{:keys [states all-results]} (process-point-all states point step)]
-    {:states states
-     :accumulated-results (into accumulated-results all-results)}))
+  "Чистая функция-редюсер: аккумулирует состояние и результаты"
+  [step {:keys [state accumulated-results]} point]
+  (let [{:keys [state results]} (step-processor state point step)]
+    {:state state
+     :accumulated-results (if results
+                            (into accumulated-results results)
+                            accumulated-results)}))
 
 (defn process-all-points
   "Обрабатывает все точки и возвращает полную последовательность результатов.
    Чистая функция без побочных эффектов."
   [algorithms window-size step points]
-  (let [initial-state {:states (create-initial-states algorithms window-size)
-                       :accumulated-results []}
-        {:keys [states accumulated-results]}
-        (reduce (partial process-point-reducer step) initial-state points)
-        final-results (finalize-all states step)]
+  (let [init-state {:state (initial-state algorithms window-size)
+                    :accumulated-results []}
+        {:keys [state accumulated-results]}
+        (reduce (partial process-point-reducer step) init-state points)
+        final-results (finalize-processor state step)]
     (concat accumulated-results final-results)))
