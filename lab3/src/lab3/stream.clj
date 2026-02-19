@@ -144,3 +144,21 @@
 
 (defn finalize-all [states step]
   (mapcat #(finalize-processor % step) states))
+
+(defn- process-point-reducer
+  "Чистая функция-редюсер: аккумулирует состояния и результаты"
+  [step {:keys [states accumulated-results]} point]
+  (let [{:keys [states all-results]} (process-point-all states point step)]
+    {:states states
+     :accumulated-results (into accumulated-results all-results)}))
+
+(defn process-all-points
+  "Обрабатывает все точки и возвращает полную последовательность результатов.
+   Чистая функция без побочных эффектов."
+  [algorithms window-size step points]
+  (let [initial-state {:states (create-initial-states algorithms window-size)
+                       :accumulated-results []}
+        {:keys [states accumulated-results]}
+        (reduce (partial process-point-reducer step) initial-state points)
+        final-results (finalize-all states step)]
+    (concat accumulated-results final-results)))

@@ -5,26 +5,12 @@
   (:gen-class)
   (:import (clojure.lang ExceptionInfo)))
 
-(defn- process-point
-  "Чистая функция: аккумулирует состояния и результаты без побочных эффектов"
-  [step {:keys [states accumulated-results]} point]
-  (let [{:keys [states all-results]} (stream/process-point-all states point step)]
-    {:states states
-     :accumulated-results (into accumulated-results all-results)}))
-
 (defn run-interpolation
-  "Обрабатывает точки потоково, возвращает ленивую последовательность результатов.
-   Чистая функция — побочные эффекты выполняются на верхнем уровне."
+  "Обрабатывает точки потоково, возвращает последовательность результатов."
   [{:keys [algorithms step window-size]} points]
-  (let [initial-state {:states (stream/create-initial-states algorithms window-size)
-                       :accumulated-results []}
-        {:keys [states accumulated-results]}
-        (reduce (partial process-point step) initial-state points)
-        final-results (stream/finalize-all states step)]
-    (concat accumulated-results final-results)))
+  (stream/process-all-points algorithms window-size step points))
 
 (defn- format-error
-  "Чистая функция: форматирует ошибку в строку"
   [prefix ^Exception e]
   (let [base-msg (str prefix " " (.getMessage e))
         details (ex-data e)]
