@@ -1,0 +1,82 @@
+(ns lab3.cli
+    (:require [clojure.tools.cli :refer [parse-opts]]
+              [clojure.string :as str]))
+
+; Data definitions
+(def algorithms
+    [{:key :linear
+      :short "-l"
+      :long "--linear"
+      :desc "Use linear interpolation"}
+     {:key :newton
+      :short "-n"
+      :long "--newton"
+      :desc "Use Newton polynomial interpolation"}
+     {:key :lagrange
+      :short "-g"
+      :long "--lagrange"
+      :desc "Use Lagrange polynomial interpolation"}])
+
+(def cli-options
+    (concat
+        (map (juxt :short :long :desc) algorithms)
+
+        [["-s" "--step STEP" "Step for output discretization"
+          :default 1.0
+          :parse-fn #(Double/parseDouble %)
+          :validate [#(> % 0) "Step must be positive"]]
+         ["-w" "--window-size SIZE" "Window size for polynomial interpolation"
+          :default 4
+          :parse-fn #(Integer/parseInt %)
+          :validate [#(>= % 2) "Window size must be at least 2"]]
+         ["-d" "--delimiter DELIM" "CSV delimiter (default: semicolon)"
+          :default ";"]
+         ["-h" "--help" "Show help"]]))
+
+; API
+(defn- validate-options
+    "Validate that at least one algorithm is selected"
+    [options]
+    (when-not (some options (map :key algorithms))
+        "At least one interpolation algorithm must be specified"))
+
+(defn- usage
+    "Generate usage/help message"
+    [options-summary]
+    (->> ["Interpolation program - Lab 3"
+          ""
+          "Usage: program [options]"
+          ""
+          "Options:"
+          options-summary
+          ""
+          "Examples:"
+          "  cat data.csv | program --linear --step 0.5"
+          "  program -n --newton -w 5 --step 0.1 < input.txt"
+          ""]
+         (str/join \newline)))
+
+(defn- error-msg
+    "Format error messages"
+    [errors]
+    (str "The following errors occurred while parsing command:\n\n"
+         (str/join \newline errors)))
+
+(defn parse-cli-args
+    "Parse command line arguments and return options map or error"
+    [args]
+    (let [parsed (parse-opts args cli-options)
+          {:keys [options errors summary]} parsed
+          validation-error (validate-options options)]
+        (cond
+            (:help options)    {:exit-message (usage summary) :ok? true}
+            errors             {:exit-message (error-msg errors) :ok? false}
+            validation-error   {:exit-message (str validation-error "\n\n" (usage summary)) :ok? false}
+            :else              {:ok? true :options options})))
+
+(defn get-selected-algorithms
+    "Return vector of selected algorithm keywords"
+    [options]
+    (filterv options (map :key algorithms)))
+
+
