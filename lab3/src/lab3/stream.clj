@@ -62,9 +62,8 @@
    
    Логика: интерполируем от последней выведенной точки до максимума текущего окна.
    Для первого окна начинаем с минимума.
-   Для не-последнего окна ограничиваем до предпоследней точки, чтобы следующее
-   окно могло продолжить интерполяцию с новыми данными."
-  [prev-end-x window step is-last]
+   Всегда интерполируем до max-x (последней точки окна)."
+  [prev-end-x window _step is-last]
   (let [[min-x max-x] (window-x-range window)
         points (get-window-points window)
         point-count (count points)]
@@ -73,22 +72,13 @@
       (< point-count 2)
       {:start-x nil :end-x nil :points []}
 
-      ;; Первое окно
+      ;; Первое окно - интерполируем от min до max
       (nil? prev-end-x)
-      (let [end-x (if is-last
-                    max-x
-                    ;; Для не-последнего окна останавливаемся на предпоследней точке
-                    (:x (nth points (- point-count 2))))]
-        {:start-x min-x :end-x end-x :points points})
+      {:start-x min-x :end-x max-x :points points}
 
-      ;; Последнее окно - интерполируем до конца
-      is-last
-      {:start-x (+ prev-end-x step) :end-x max-x :points points}
-
-      ;; Промежуточное окно - интерполируем до предпоследней точки
+      ;; Последнее окно или промежуточное - интерполируем до max
       :else
-      (let [end-x (:x (nth points (- point-count 2)))]
-        {:start-x (+ prev-end-x step) :end-x end-x :points points}))))
+      {:start-x prev-end-x :end-x max-x :points points})))
 
 (defn process-stream [algorithm-key window-size step points output-fn]
   (let [effective-window-size (max window-size interp/min-points)]
@@ -132,10 +122,12 @@
     (if (window-full? new-window)
       (let [{:keys [start-x end-x points]}
             (process-window-segment prev-end-x new-window step false)
-            results (when (and start-x end-x (seq points) (<= start-x end-x))
-                      (interpolate-segment-all algorithms points start-x end-x step))
+            ;; Эффективное начало: для последующих окон начинаем с prev-end-x + step
+            effective-start (if prev-end-x (+ prev-end-x step) start-x)
+            results (when (and effective-start end-x (seq points) (<= effective-start end-x))
+                      (interpolate-segment-all algorithms points effective-start end-x step))
             ;; Сохраняем последнюю фактически выведенную x-координату
-            actual-last-x (when (seq results) (last-x-value start-x end-x step))]
+            actual-last-x (when (seq results) (last-x-value effective-start end-x step))]
         {:state (assoc state :window new-window :prev-end-x (or actual-last-x prev-end-x))
          :results results})
       {:state (assoc state :window new-window)
