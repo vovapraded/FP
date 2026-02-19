@@ -11,27 +11,26 @@
      :step - шаг дискретизации
      :window-size - размер окна для полиномиальной интерполяции
    points - ленивая последовательность точек
-   
+
    Обрабатывает точки лениво с использованием чистых функций.
    Состояние передаётся явно через reduce."
   [{:keys [algorithms step window-size]} points]
-  (let [
-        ;; Начальные состояния процессоров (чистые данные)
+  (let [;; Начальные состояния процессоров (чистые данные)
         initial-states (stream/create-initial-states algorithms window-size)
-        
+
         ;; Обрабатываем точки через reduce с явной передачей состояния
         ;; Побочный эффект (вывод) выполняется внутри reduce после каждой точки
         final-states (reduce
-                       (fn [states point]
-                         (let [{:keys [states all-results]} 
-                               (stream/process-point-all states point step)]
+                      (fn [states point]
+                        (let [{:keys [states all-results]}
+                              (stream/process-point-all states point step)]
                            ;; Выводим результаты сразу (единственный побочный эффект)
-                           (doseq [r all-results]
-                             (io/print-result! r))
-                           states))
-                       initial-states
-                       points)
-        
+                          (doseq [r all-results]
+                            (io/print-result! r))
+                          states))
+                      initial-states
+                      points)
+
         ;; Финализируем и выводим остаток
         final-results (stream/finalize-all final-states step)]
     (doseq [r final-results]

@@ -77,18 +77,18 @@
       ;; Недостаточно точек
       (< point-count 2)
       {:start-x nil :end-x nil :points []}
-      
+
       ;; Первое окно - интерполируем до середины
       (nil? prev-end-x)
       (let [mid-x (if is-last
                     max-x
                     (/ (+ min-x max-x) 2))]
         {:start-x min-x :end-x mid-x :points points})
-      
+
       ;; Последнее окно - интерполируем от предыдущей точки до конца
       is-last
       {:start-x (+ prev-end-x step) :end-x max-x :points points}
-      
+
       ;; Промежуточное окно - интерполируем центральную область
       :else
       (let [mid-x (/ (+ min-x max-x) 2)]
@@ -101,7 +101,7 @@
    step - шаг дискретизации
    points - ленивая последовательность точек
    output-fn - функция вывода (принимает результат интерполяции)
-   
+
    Возвращает nil, выводит результаты через output-fn"
   [algorithm-key window-size step points output-fn]
   (let [min-points (interp/get-min-points algorithm-key)
@@ -116,7 +116,7 @@
               new-window (add-to-window window point)]
           (if (window-full? new-window)
             ;; Окно заполнено - интерполируем
-            (let [{:keys [start-x end-x points]} 
+            (let [{:keys [start-x end-x points]}
                   (process-window-segment prev-end-x new-window step false)]
               (when (and start-x end-x (seq points))
                 (let [results (interpolate-segment algorithm-key points start-x end-x step)]
@@ -208,7 +208,7 @@
         new-window (add-to-window window point)]
     (if (window-full? new-window)
       ;; Окно заполнено - интерполируем
-      (let [{:keys [start-x end-x points]} 
+      (let [{:keys [start-x end-x points]}
             (process-window-segment prev-end-x new-window step false)
             results (when (and start-x end-x (seq points))
                       (interpolate-segment algorithm points start-x end-x step))]
@@ -273,26 +273,26 @@
    Возвращает {:states новые-состояния :all-results seq-всех-результатов}"
   [states point step]
   (reduce
-    (fn [{:keys [states all-results]} state]
-      (let [{:keys [algorithm]} state
-            {:keys [state results]} (if (= algorithm :linear)
-                                      (step-linear-processor state point step)
-                                      (step-processor state point step))]
-        {:states (conj states state)
-         :all-results (if results 
-                        (concat all-results results)
-                        all-results)}))
-    {:states [] :all-results []}
-    states))
+   (fn [{:keys [states all-results]} state]
+     (let [{:keys [algorithm]} state
+           {:keys [state results]} (if (= algorithm :linear)
+                                     (step-linear-processor state point step)
+                                     (step-processor state point step))]
+       {:states (conj states state)
+        :all-results (if results
+                       (concat all-results results)
+                       all-results)}))
+   {:states [] :all-results []}
+   states))
 
 (defn finalize-all
   "Финализировать все процессоры
    Возвращает seq всех финальных результатов"
   [states step]
   (mapcat
-    (fn [state]
-      (let [{:keys [algorithm]} state]
-        (if (= algorithm :linear)
-          (finalize-linear-processor state)
-          (finalize-processor state step))))
-    states))
+   (fn [state]
+     (let [{:keys [algorithm]} state]
+       (if (= algorithm :linear)
+         (finalize-linear-processor state)
+         (finalize-processor state step))))
+   states))
