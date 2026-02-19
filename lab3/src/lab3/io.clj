@@ -47,7 +47,7 @@
                            (throw (ex-info "Input points must be sorted by x coordinate"
                                            {:previous prev-x :current curr-x})))
                          curr-x))]
-    ;; Use reductions to maintain state, but only realize as consumed
+    ; Используем reductions для поддержания состояния с сохранением лени последовательности
     (map second
          (rest (reductions (fn [[prev-x _] point]
                              [(check-sorted prev-x point) point])

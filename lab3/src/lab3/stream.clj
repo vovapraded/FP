@@ -38,15 +38,6 @@
   (when (seq points)
     [(:x (first points)) (:x (last points))]))
 
-(defn interpolate-segment
-  "Возвращает seq {:algorithm :x :y}"
-  [algorithm-key points start-x end-x step]
-  (map (fn [x]
-         {:algorithm algorithm-key
-          :x x
-          :y (interp/interpolate algorithm-key points x)})
-       (generate-x-values start-x end-x step)))
-
 (defn interpolate-segment-all
   "Интерполирует сегмент для всех алгоритмов сразу.
    Возвращает seq {:algorithm :x :y}"
@@ -63,7 +54,7 @@
    Логика: интерполируем от последней выведенной точки до максимума текущего окна.
    Для первого окна начинаем с минимума.
    Всегда интерполируем до max-x (последней точки окна)."
-  [prev-end-x window _step is-last]
+  [prev-end-x window _step]
   (let [[min-x max-x] (window-x-range window)
         points (get-window-points window)
         point-count (count points)]
@@ -80,33 +71,6 @@
       :else
       {:start-x prev-end-x :end-x max-x :points points})))
 
-(defn process-stream [algorithm-key window-size step points output-fn]
-  (let [effective-window-size (max window-size interp/min-points)]
-    (loop [remaining points
-           window (create-window effective-window-size)
-           prev-end-x nil]
-      (if (seq remaining)
-        (let [point (first remaining)
-              new-window (add-to-window window point)]
-          (if (window-full? new-window)
-            (let [{:keys [start-x end-x points]}
-                  (process-window-segment prev-end-x new-window step false)
-                  results (when (and start-x end-x (seq points) (<= start-x end-x))
-                            (interpolate-segment algorithm-key points start-x end-x step))
-                  actual-last-x (when (seq results) (last-x-value start-x end-x step))]
-              (doseq [r results]
-                (output-fn r))
-              (recur (rest remaining) new-window (or actual-last-x prev-end-x)))
-            (recur (rest remaining) new-window prev-end-x)))
-        (when (>= (count (get-window-points window)) 2)
-          (let [{:keys [start-x end-x points]}
-                (process-window-segment prev-end-x window step true)
-                effective-start (if prev-end-x (+ prev-end-x step) start-x)]
-            (when (and effective-start end-x (seq points) (<= effective-start end-x))
-              (let [results (interpolate-segment algorithm-key points effective-start end-x step)]
-                (doseq [r results]
-                  (output-fn r))))))))))
-
 (defn initial-state
   "Создаёт начальное состояние процессора с одним общим окном для всех алгоритмов"
   [algorithms window-size]
@@ -121,13 +85,13 @@
   (let [new-window (add-to-window window point)]
     (if (window-full? new-window)
       (let [{:keys [start-x end-x points]}
-            (process-window-segment prev-end-x new-window step false)
-            ;; Эффективное начало: для последующих окон начинаем с prev-end-x + step
-            effective-start (if prev-end-x (+ prev-end-x step) start-x)
-            results (when (and effective-start end-x (seq points) (<= effective-start end-x))
-                      (interpolate-segment-all algorithms points effective-start end-x step))
+            (process-window-segment prev-end-x new-window step)
+            ;; Начало сегмента: для последующих окон начинаем с prev-end-x + step
+            segment-start-x (if prev-end-x (+ prev-end-x step) start-x)
+            results (when (and segment-start-x end-x (seq points) (<= segment-start-x end-x))
+                      (interpolate-segment-all algorithms points segment-start-x end-x step))
             ;; Сохраняем последнюю фактически выведенную x-координату
-            actual-last-x (when (seq results) (last-x-value effective-start end-x step))]
+            actual-last-x (when (seq results) (last-x-value segment-start-x end-x step))]
         {:state (assoc state :window new-window :prev-end-x (or actual-last-x prev-end-x))
          :results results})
       {:state (assoc state :window new-window)
@@ -138,27 +102,7 @@
   [{:keys [algorithms window prev-end-x]} step]
   (when (and window (>= (count (get-window-points window)) 2))
     (let [{:keys [start-x end-x points]}
-          (process-window-segment prev-end-x window step true)
-          effective-start (or (some-> prev-end-x (+ step)) start-x)]
-      (when (and effective-start end-x (seq points) (<= effective-start end-x))
-        (interpolate-segment-all algorithms points effective-start end-x step)))))
-
-(defn- process-point-reducer
-  "Чистая функция-редюсер: аккумулирует состояние и результаты"
-  [step {:keys [state accumulated-results]} point]
-  (let [{:keys [state results]} (step-processor state point step)]
-    {:state state
-     :accumulated-results (if results
-                            (into accumulated-results results)
-                            accumulated-results)}))
-
-(defn process-all-points
-  "Обрабатывает все точки и возвращает полную последовательность результатов.
-   Чистая функция без побочных эффектов."
-  [algorithms window-size step points]
-  (let [init-state {:state (initial-state algorithms window-size)
-                    :accumulated-results []}
-        {:keys [state accumulated-results]}
-        (reduce (partial process-point-reducer step) init-state points)
-        final-results (finalize-processor state step)]
-    (concat accumulated-results final-results)))
+          (process-window-segment prev-end-x window step)
+          segment-start-x (or (some-> prev-end-x (+ step)) start-x)]
+      (when (and segment-start-x end-x (seq points) (<= segment-start-x end-x))
+        (interpolate-segment-all algorithms points segment-start-x end-x step)))))

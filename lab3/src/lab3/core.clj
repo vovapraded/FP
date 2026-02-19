@@ -6,7 +6,7 @@
   (:import (clojure.lang ExceptionInfo)))
 
 (defn run-interpolation-streaming!
-  "Обрабатывает точки потоково с немедленным выводом результатов."
+  "Обрабатывает точки потоково с выводом результатов."
   [{:keys [algorithms step window-size]} points]
   (let [state-atom (atom (stream/initial-state algorithms window-size))]
     (doseq [point points]
@@ -15,7 +15,7 @@
         (when results
           (doseq [r results]
             (io/print-result! r)))))
-    ;; Финализация: вывод оставшихся точек
+    ;; Вывод оставшихся точек
     (when-let [final-results (stream/finalize-processor @state-atom step)]
       (doseq [r final-results]
         (io/print-result! r)))))
@@ -54,7 +54,6 @@
           {:exit-code 1 :error (format-error "Unexpected error:" e)})))))
 
 (defn -main
-  "Точка входа: единственное место с побочными эффектами (печать, System/exit)"
   [& args]
   (let [{:keys [exit-code output error]} (run-app args)]
     (cond

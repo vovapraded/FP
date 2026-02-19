@@ -5,7 +5,7 @@
 (defn linear-interpolate [points x]
   (let [n (count points)
         {x1 :x y1 :y} (nth points (- n 2))
-        {x2 :x y2 :y} (nth points (- n 1))]
+        {x2 :x y2 :y} (nth points (dec n))]
     (+ y1 (* (- y2 y1) (/ (- x x1) (- x2 x1))))))
 
 (defn- divided-differences
@@ -59,7 +59,6 @@
     (reduce
      (fn [sum i]
        (let [{xi :x yi :y} (nth points i)
-             ;; Вычисляем базисный полином l_i(x)
              li (reduce
                  (fn [prod j]
                    (if (= i j)
@@ -76,9 +75,6 @@
   {:linear   linear-interpolate
    :newton   newton-interpolate
    :lagrange lagrange-interpolate})
-
-(defn get-interpolation-fn [algorithm-key]
-  (get algorithms algorithm-key))
 
 (defn interpolate [algorithm-key points x]
   (if-let [interp-fn (algorithms algorithm-key)]
