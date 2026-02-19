@@ -137,11 +137,10 @@
 (defn process-linear-stream
   "Специальная обработка для линейной интерполяции
    Интерполирует между каждой парой соседних точек
-   algorithm-key - ключ алгоритма (обычно :linear)
    step - шаг дискретизации
    points - последовательность точек
    output-fn - функция вывода"
-  [algorithm-key step points output-fn]
+  [step points output-fn]
   (loop [remaining points
          prev-point nil
          prev-end-x nil]
@@ -149,13 +148,13 @@
       (let [point (first remaining)]
         (if prev-point
           ;; Есть предыдущая точка - интерполируем между ними
-          (let [start-x (if prev-end-x 
+          (let [start-x (if prev-end-x
                           (+ prev-end-x step)
                           (:x prev-point))
                 end-x (:x point)
                 two-points [prev-point point]]
             (when (<= start-x end-x)
-              (let [results (interpolate-segment algorithm-key two-points start-x end-x step)]
+              (let [results (interpolate-segment :linear two-points start-x end-x step)]
                 (doseq [r results]
                   (output-fn r))))
             (recur (rest remaining) point end-x))
@@ -163,7 +162,7 @@
           (recur (rest remaining) point nil)))
       ;; Если была только одна точка, выводим её
       (when (and prev-point (nil? prev-end-x))
-        (output-fn {:algorithm algorithm-key :x (:x prev-point) :y (:y prev-point)})))))
+        (output-fn {:algorithm :linear :x (:x prev-point) :y (:y prev-point)})))))
 
 ;; ========== ВЫСОКОУРОВНЕВЫЙ API ==========
 
@@ -174,7 +173,7 @@
   (if (= algorithm-key :linear)
     ;; Линейная интерполяция использует особую обработку
     (fn [points output-fn]
-      (process-linear-stream algorithm-key step points output-fn))
+      (process-linear-stream step points output-fn))
     ;; Остальные алгоритмы используют общую обработку с окном
     (fn [points output-fn]
       (process-stream algorithm-key window-size step points output-fn))))
@@ -193,8 +192,8 @@
 
 (defn initial-linear-state
   "Создать начальное состояние для линейной интерполяции"
-  [algorithm-key]
-  {:algorithm algorithm-key
+  []
+  {:algorithm :linear
    :prev-point nil
    :prev-end-x nil})
 
@@ -219,16 +218,16 @@
 (defn step-linear-processor
   "Обработать одну точку для линейной интерполяции (чистая функция)"
   [state point step]
-  (let [{:keys [algorithm prev-point prev-end-x]} state]
+  (let [{:keys [prev-point prev-end-x]} state]
     (if prev-point
       ;; Есть предыдущая точка - интерполируем
-      (let [start-x (if prev-end-x 
+      (let [start-x (if prev-end-x
                       (+ prev-end-x step)
                       (:x prev-point))
             end-x (:x point)
             two-points [prev-point point]
             results (when (<= start-x end-x)
-                      (interpolate-segment algorithm two-points start-x end-x step))]
+                      (interpolate-segment :linear two-points start-x end-x step))]
         {:state (assoc state :prev-point point :prev-end-x end-x)
          :results results})
       ;; Первая точка
@@ -250,16 +249,16 @@
 (defn finalize-linear-processor
   "Финализировать линейный процессор"
   [state]
-  (let [{:keys [algorithm prev-point prev-end-x]} state]
+  (let [{:keys [prev-point prev-end-x]} state]
     (when (and prev-point (nil? prev-end-x))
-      [{:algorithm algorithm :x (:x prev-point) :y (:y prev-point)}])))
+      [{:algorithm :linear :x (:x prev-point) :y (:y prev-point)}])))
 
 (defn create-initial-states
   "Создать начальные состояния для всех алгоритмов"
   [algorithms window-size]
   (mapv (fn [alg]
           (if (= alg :linear)
-            (initial-linear-state alg)
+            (initial-linear-state)
             (initial-processor-state alg window-size)))
         algorithms))
 

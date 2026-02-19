@@ -139,7 +139,7 @@
 
 (deftest test-format-result-basic
     (testing "Format basic result"
-        (is (= "linear: 1 2" (io/format-result :linear 1.0 2.0)))))
+        (is (= "linear: 1.00 | 2.00" (io/format-result :linear 1.0 2.0)))))
 
 (deftest test-format-result-scientific
     (testing "Format with scientific notation for large numbers"
@@ -149,28 +149,28 @@
 
 (deftest test-format-result-negative
     (testing "Format negative numbers"
-        (is (= "lagrange: -1 -2" (io/format-result :lagrange -1.0 -2.0)))))
+        (is (= "lagrange: -1.00 | -2.00" (io/format-result :lagrange -1.0 -2.0)))))
 
 (deftest test-format-result-precision
     (testing "Format handles precision correctly"
         (let [result (io/format-result :linear 1.23456789 2.98765432)]
-            (is (str/includes? result "1.234568"))
-            (is (str/includes? result "2.987654")))))
+            (is (str/includes? result "1.23"))
+            (is (str/includes? result "2.99")))))
 
 ;; ========== PRINT-RESULT TESTS ==========
 
 (deftest test-print-result
     (testing "Print result produces correct output"
         (let [output (with-out-str (io/print-result! :linear 1.5 2.7))]
-            (is (= "linear: 1.500000 2.700000\n" output)))))
+            (is (= "linear: 1.50 | 2.70\n" output)))))
 
 (deftest test-print-results
     (testing "Print multiple results"
         (let [results [{:algorithm :linear :x 0.0 :y 0.0}
                        {:algorithm :newton :x 1.0 :y 1.0}]
               output (with-out-str (io/print-results! results))]
-            (is (str/includes? output "linear: 0 0"))
-            (is (str/includes? output "newton: 1 1")))))
+            (is (str/includes? output "linear: 0.00 | 0.00"))
+            (is (str/includes? output "newton: 1.00 | 1.00")))))
 
 ;; ========== SPY TESTS ==========
 
