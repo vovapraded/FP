@@ -4,26 +4,38 @@
             [lab3.stream :as stream])
   (:gen-class))
 
-(defn create-output-fn
-  "Создать функцию вывода результата"
-  []
-  (fn [{:keys [algorithm x y]}]
-    (io/print-result! algorithm x y)))
-
 (defn run-interpolation
   "Запустить интерполяцию для заданных параметров
-   algorithms - список алгоритмов [:linear :newton ...]
-   options - опции из CLI
-   points - последовательность точек"
-  [algorithms options points]
-  (let [{:keys [step window-size]} options
-        output-fn (create-output-fn)
-        ;; Материализуем точки, чтобы их можно было использовать повторно
-        points-vec (vec points)]
-    ;; Запускаем каждый алгоритм
-    (doseq [algorithm algorithms]
-      (let [processor (stream/create-stream-processor algorithm window-size step)]
-        (processor points-vec output-fn)))))
+   params - карта с ключами:
+     :algorithms - список алгоритмов [:linear :newton ...]
+     :step - шаг дискретизации
+     :window-size - размер окна для полиномиальной интерполяции
+   points - ленивая последовательность точек
+   
+   Обрабатывает точки лениво с использованием чистых функций.
+   Состояние передаётся явно через reduce."
+  [{:keys [algorithms step window-size]} points]
+  (let [
+        ;; Начальные состояния процессоров (чистые данные)
+        initial-states (stream/create-initial-states algorithms window-size)
+        
+        ;; Обрабатываем точки через reduce с явной передачей состояния
+        ;; Побочный эффект (вывод) выполняется внутри reduce после каждой точки
+        final-states (reduce
+                       (fn [states point]
+                         (let [{:keys [states all-results]} 
+                               (stream/process-point-all states point step)]
+                           ;; Выводим результаты сразу (единственный побочный эффект)
+                           (doseq [r all-results]
+                             (io/print-result! r))
+                           states))
+                       initial-states
+                       points)
+        
+        ;; Финализируем и выводим остаток
+        final-results (stream/finalize-all final-states step)]
+    (doseq [r final-results]
+      (io/print-result! r))))
 
 (defn -main [& args]
   (let [{:keys [ok? exit-message options]} (cli/parse-cli-args args)]
@@ -33,10 +45,13 @@
         (System/exit (if ok? 0 1)))
       (try
         (let [algorithms (cli/get-selected-algorithms options)
-              delimiter (:delimiter options)
+              {:keys [step window-size delimiter]} options
               lines (io/create-input-stream)
               points (io/validate-sorted (io/parse-points delimiter lines))]
-          (run-interpolation algorithms options points))
+          (run-interpolation {:algorithms algorithms
+                              :step step
+                              :window-size window-size}
+                             points))
         (catch clojure.lang.ExceptionInfo e
           (binding [*out* *err*]
             (println "Error:" (.getMessage e))

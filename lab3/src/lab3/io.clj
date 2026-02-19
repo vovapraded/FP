@@ -67,14 +67,28 @@
 
 (defn print-result!
     "Print single result and flush output immediately"
-    [algorithm x y]
-    (println (format-result algorithm x y))
-    (flush))
+    ([algorithm x y]
+     (println (format-result algorithm x y))
+     (flush))
+    ([{:keys [algorithm x y]}]
+     (print-result! algorithm x y)))
 
 (defn print-results!
     "Print sequence of results
      Each result is a map {:algorithm :x :y}"
     [results]
-    (doseq [{:keys [algorithm x y]} results]
-        (print-result! algorithm x y)))
+    (doseq [result results]
+        (print-result! result)))
+
+;; ========== DEBUG ==========
+
+(defn spy
+    "Debug helper - prints value and returns it
+     Can be used with or without label"
+    ([value]
+     (println value)
+     value)
+    ([label value]
+     (println (str label ": " (pr-str value)))
+     value))
 

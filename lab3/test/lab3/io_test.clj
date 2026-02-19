@@ -153,15 +153,15 @@
 (deftest test-format-result-precision
     (testing "Format handles precision correctly"
         (let [result (io/format-result :linear 1.23456789 2.98765432)]
-            (is (str/includes? result "1.23457"))
-            (is (str/includes? result "2.98765")))))
+            (is (str/includes? result "1.234568"))
+            (is (str/includes? result "2.987654")))))
 
 ;; ========== PRINT-RESULT TESTS ==========
 
 (deftest test-print-result
     (testing "Print result produces correct output"
         (let [output (with-out-str (io/print-result! :linear 1.5 2.7))]
-            (is (= "linear: 1.5 2.7\n" output)))))
+            (is (= "linear: 1.500000 2.700000\n" output)))))
 
 (deftest test-print-results
     (testing "Print multiple results"
