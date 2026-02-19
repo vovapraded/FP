@@ -33,11 +33,12 @@
       (is (approx= y (interp/interpolate alg points x))
           (format "%s at node x=%s should return y=%s" alg x y)))))
 
-(deftest linear-at-first-two-nodes-test
-  (testing "Линейная интерполяция точна в первых двух узлах"
+(deftest linear-at-last-two-nodes-test
+  (testing "Линейная интерполяция точна в последних двух узлах"
     (doseq [points [linear-points quadratic-points cubic-points]]
-      (let [{x1 :x y1 :y} (first points)
-            {x2 :x y2 :y} (second points)]
+      (let [n (count points)
+            {x1 :x y1 :y} (nth points (- n 2))
+            {x2 :x y2 :y} (nth points (- n 1))]
         (is (approx= y1 (interp/linear-interpolate points x1)))
         (is (approx= y2 (interp/linear-interpolate points x2)))))))
 

@@ -3,8 +3,9 @@
 (def min-points 2)
 
 (defn linear-interpolate [points x]
-  (let [{x1 :x y1 :y} (first points)
-        {x2 :x y2 :y} (second points)]
+  (let [n (count points)
+        {x1 :x y1 :y} (nth points (- n 2))
+        {x2 :x y2 :y} (nth points (- n 1))]
     (+ y1 (* (- y2 y1) (/ (- x x1) (- x2 x1))))))
 
 (defn- divided-differences
