@@ -4,8 +4,12 @@
 (defn generate-x-values
   "Никогда не выйдет за end"
   [start end step]
-  (let [n (long (Math/floor (/ (- end start) step)))]
-    (map #(+ start (* % step)) (range (inc n)))))
+  (->> (/ (- end start) step)
+       Math/floor
+       long
+       inc
+       range
+       (map #(+ start (* % step)))))
 
 (defn create-window [size]
   {:size size
@@ -32,12 +36,11 @@
 (defn interpolate-segment
   "Возвращает seq {:algorithm :x :y}"
   [algorithm-key points start-x end-x step]
-  (let [x-values (generate-x-values start-x end-x step)]
-    (map (fn [x]
-           {:algorithm algorithm-key
-            :x x
-            :y (interp/interpolate algorithm-key points x)})
-         x-values)))
+  (map (fn [x]
+         {:algorithm algorithm-key
+          :x x
+          :y (interp/interpolate algorithm-key points x)})
+       (generate-x-values start-x end-x step)))
 
 (defn- process-window-segment
   "Возвращает {:start-x :end-x :points}"
@@ -72,11 +75,9 @@
            window (create-window effective-window-size)
            prev-end-x nil]
       (if (seq remaining)
-        ;; Есть ещё точки - добавляем в окно
         (let [point (first remaining)
               new-window (add-to-window window point)]
           (if (window-full? new-window)
-            ;; Окно заполнено - интерполируем
             (let [{:keys [start-x end-x points]}
                   (process-window-segment prev-end-x new-window step false)]
               (when (and start-x end-x (seq points))
@@ -84,9 +85,7 @@
                   (doseq [r results]
                     (output-fn r))))
               (recur (rest remaining) new-window end-x))
-            ;; Окно не заполнено - продолжаем накапливать
             (recur (rest remaining) new-window prev-end-x)))
-        ;; Точки закончились - обрабатываем последнее окно
         (when (>= (count (get-window-points window)) 2)
           (let [{:keys [start-x end-x points]}
                 (process-window-segment prev-end-x window step true)
@@ -108,29 +107,24 @@
 
 (defn step-processor
   "Возвращает {:state :results}"
-  [state point step]
-  (let [{:keys [algorithm window prev-end-x]} state
-        new-window (add-to-window window point)]
+  [{:keys [algorithm window prev-end-x] :as state} point step]
+  (let [new-window (add-to-window window point)]
     (if (window-full? new-window)
-      ;; Окно заполнено - интерполируем
       (let [{:keys [start-x end-x points]}
-            (process-window-segment prev-end-x new-window step false)
-            results (when (and start-x end-x (seq points))
-                      (interpolate-segment algorithm points start-x end-x step))]
+            (process-window-segment prev-end-x new-window step false)]
         {:state (assoc state :window new-window :prev-end-x end-x)
-         :results results})
-      ;; Окно не заполнено
+         :results (when (and start-x end-x (seq points))
+                    (interpolate-segment algorithm points start-x end-x step))})
       {:state (assoc state :window new-window)
        :results nil})))
 
-(defn finalize-processor [state step]
-  (let [{:keys [algorithm window prev-end-x]} state]
-    (when (and window (>= (count (get-window-points window)) 2))
-      (let [{:keys [start-x end-x points]}
-            (process-window-segment prev-end-x window step true)
-            effective-start (if prev-end-x (+ prev-end-x step) start-x)]
-        (when (and effective-start end-x (seq points) (<= effective-start end-x))
-          (interpolate-segment algorithm points effective-start end-x step))))))
+(defn finalize-processor [{:keys [algorithm window prev-end-x]} step]
+  (when (and window (>= (count (get-window-points window)) 2))
+    (let [{:keys [start-x end-x points]}
+          (process-window-segment prev-end-x window step true)
+          effective-start (or (some-> prev-end-x (+ step)) start-x)]
+      (when (and effective-start end-x (seq points) (<= effective-start end-x))
+        (interpolate-segment algorithm points effective-start end-x step)))))
 
 (defn create-initial-states [algorithms window-size]
   (mapv #(initial-processor-state % window-size) algorithms))

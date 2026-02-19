@@ -35,7 +35,7 @@
       :default ";"]
      ["-h" "--help" "Show help"]])))
 
-; API
+;; API
 (defn- validate-options [options]
   (when-not (some options (map :key algorithms))
     "At least one interpolation algorithm must be specified"))

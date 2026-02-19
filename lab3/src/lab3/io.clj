@@ -11,12 +11,11 @@
   (try
     (let [trimmed (str/trim line)]
       (when-not (or (empty? trimmed)
-                    (str/starts-with? trimmed "#"))  ; allow comments
+                    (str/starts-with? trimmed "#"))
         (let [parts (str/split trimmed (re-pattern delimiter))]
           (when (= 2 (count parts))
-            (let [x (Double/parseDouble (str/trim (first parts)))
-                  y (Double/parseDouble (str/trim (second parts)))]
-              {:x x :y y})))))
+            {:x (-> parts first str/trim Double/parseDouble)
+             :y (-> parts second str/trim Double/parseDouble)}))))
     (catch Exception e
       (binding [*out* *err*]
         (println "Warning: failed to parse line:" line)
@@ -24,9 +23,7 @@
       nil)))
 
 (defn parse-points [delimiter lines]
-  (->> lines
-       (map (partial parse-line delimiter))
-       (filter some?)))
+  (->> lines (keep (partial parse-line delimiter))))
 
 (defn validate-sorted
   "Throws exception on first unsorted or duplicate pair"
@@ -59,8 +56,7 @@
    (print-result! algorithm x y)))
 
 (defn print-results! [results]
-  (doseq [result results]
-    (print-result! result)))
+  (run! print-result! results))
 
 (defn spy
   ([value]

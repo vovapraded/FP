@@ -24,6 +24,6 @@
   (get algorithms algorithm-key))
 
 (defn interpolate [algorithm-key points x]
-  (if-let [interp-fn (get-interpolation-fn algorithm-key)]
+  (if-let [interp-fn (algorithms algorithm-key)]
     (interp-fn points x)
     (throw (ex-info "Unknown interpolation algorithm" {:algorithm algorithm-key}))))
