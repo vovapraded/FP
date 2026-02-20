@@ -8,17 +8,18 @@
 (defn run-interpolation-streaming!
   "Обрабатывает точки потоково с выводом результатов."
   [{:keys [algorithms step window-size]} points]
-  (let [state-atom (atom (stream/initial-state algorithms window-size))]
-    (doseq [point points]
-      (let [{:keys [state results]} (stream/step-processor @state-atom point step)]
-        (reset! state-atom state)
+  (loop [state (stream/initial-state algorithms window-size)
+         remaining points]
+    (if-let [point (first remaining)]
+      (let [{:keys [state results]} (stream/step-processor state point step)]
         (when results
           (doseq [r results]
-            (io/print-result! r)))))
-    ;; Вывод оставшихся точек
-    (when-let [final-results (stream/finalize-processor @state-atom step)]
-      (doseq [r final-results]
-        (io/print-result! r)))))
+            (io/print-result! r)))
+        (recur state (rest remaining)))
+      ;; Вывод оставшихся точек
+      (when-let [final-results (stream/finalize-processor state step)]
+        (doseq [r final-results]
+          (io/print-result! r))))))
 
 (defn- format-error
   [prefix ^Exception e]
