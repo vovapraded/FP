@@ -71,12 +71,17 @@
      0.0
      (range n))))
 
-(def algorithms
-  {:linear   linear-interpolate
-   :newton   newton-interpolate
-   :lagrange lagrange-interpolate})
+(defmulti interpolate
+  (fn [algorithm-key _points _x] algorithm-key))
 
-(defn interpolate [algorithm-key points x]
-  (if-let [interp-fn (algorithms algorithm-key)]
-    (interp-fn points x)
-    (throw (ex-info "Unknown interpolation algorithm" {:algorithm algorithm-key}))))
+(defmethod interpolate :linear [_ points x]
+  (linear-interpolate points x))
+
+(defmethod interpolate :newton [_ points x]
+  (newton-interpolate points x))
+
+(defmethod interpolate :lagrange [_ points x]
+  (lagrange-interpolate points x))
+
+(defmethod interpolate :default [algorithm-key _ _]
+  (throw (ex-info "Unknown interpolation algorithm" {:algorithm algorithm-key})))
